@@ -1,34 +1,82 @@
-// src/components/Sidebar.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    ArrowLeft,
+    LayoutDashboard,
+    UserCheck,
+    Palmtree,
+    HandCoins,
+    FileQuestion,
+    IdCard,
+    GraduationCap,
+    Utensils,
+    Sparkles,
+    Frown,
+    FileText,
+    Building2,
+    User,
+    ShieldCheck,
+    LogOut,
+    Factory
+} from 'lucide-react';
 
-const menuItems = [
-  "Dashboard",
-  "Production Schedule",
-  "Store / Bin Details",
-  "Reports",
-  "Green Certificate",
-];
+const Sidebar = () => {
+    const navigate = useNavigate();
 
-export default function Sidebar({ active, onSelect }) {
-  return (
-    <div className="w-64 h-screen bg-[#0A2342] text-white p-6 fixed left-0 top-0">
-      <h1 className="text-3xl font-extrabold mb-8">SMG</h1>
+    const menuItems = [
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+        { icon: ShieldCheck, label: 'Warranty', path: '/warranty-claim' },
+        { icon: UserCheck, label: 'Attendance' },
+        { icon: Palmtree, label: 'Leaves' },
+        { icon: HandCoins, label: 'Salary' },
+        { icon: FileQuestion, label: 'My request', path: '/requests' },
+        { icon: IdCard, label: 'My documents' },
+        { icon: GraduationCap, label: 'Training' },
+        { icon: Utensils, label: 'Canteen' },
+        { icon: Sparkles, label: 'SMG Imagine' },
+        { icon: Frown, label: 'Grievance Redressal' },
+        { icon: FileText, label: 'Policies' },
+        { icon: Building2, label: 'Facilities' },
+        { icon: User, label: 'Profile' },
+        { icon: Factory, label: 'Operations', path: '/operations' },
+    ];
 
-      <ul className="space-y-3 text-sm">
-        {menuItems.map((item) => (
-          <li
-            key={item}
-            onClick={() => onSelect(item)}
-            className={
-              "cursor-pointer px-3 py-2 rounded transition " +
-              (item === active
-                ? "bg-white text-[#0A2342] font-semibold"
-                : "hover:bg-blue-900")
-            }
-          >
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
+    return (
+        <div className="w-64 h-full bg-[#1B365D] text-white flex flex-col font-sans overflow-y-auto">
+            {/* Back Button */}
+            <div className="p-4 flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors">
+                <ArrowLeft size={20} />
+                <span className="font-medium text-sm">Back</span>
+            </div>
+
+            {/* Menu Items */}
+            <div className="flex-1 py-2">
+                {menuItems.map((item, index) => (
+                    <div
+                        key={index}
+                        onClick={() => item.path && navigate(item.path)}
+                        className="px-6 py-3 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors group"
+                    >
+                        <item.icon
+                            size={20}
+                            className="text-white/80 group-hover:text-white stroke-[1.5px]"
+                        />
+                        <span className="text-[15px] font-normal text-white/90 group-hover:text-white">
+                            {item.label}
+                        </span>
+                    </div>
+                ))}
+            </div>
+
+            {/* Logout */}
+            <div className="p-4 mt-auto border-t border-white/10">
+                <div className="px-2 py-2 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-colors rounded-lg">
+                    <LogOut size={20} className="text-white/80 stroke-[1.5px]" />
+                    <span className="text-[15px] font-medium">Logout</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Sidebar;
