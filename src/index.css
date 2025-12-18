@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ======================================================
+   FORM WRAPPERS
+====================================================== */
+
+.form-box {
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm p-6 md:p-8;
+}
+
+.form-title {
+  @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+/* ======================================================
+   FORM FIELDS
+====================================================== */
+
+.vf-field {
+  @apply flex flex-col gap-1;
+}
+
+.vf-label {
+  @apply text-xs font-medium text-gray-700;
+}
+
+.vf-input {
+  @apply w-full h-10 px-3 rounded-md border border-gray-300
+         text-sm bg-white
+         focus:outline-none focus:ring-2 focus:ring-[#1F3A63]
+         focus:border-[#1F3A63];
+}
+
+.vf-textarea {
+  @apply w-full px-3 py-2 rounded-md border border-gray-300
+         text-sm bg-white resize-none
+         focus:outline-none focus:ring-2 focus:ring-[#1F3A63]
+         focus:border-[#1F3A63];
+}
+
+.vf-hint {
+  @apply text-xs text-gray-500;
+}
+
+/* ======================================================
+   RADIO & CHECKBOX
+====================================================== */
+
+.vf-radio-group {
+  @apply flex flex-wrap items-center gap-6 text-sm text-gray-700;
+}
+
+.vf-checkbox {
+  @apply flex items-center gap-2 text-sm text-gray-700;
+}
+
+/* ======================================================
+   SECTION TITLES
+====================================================== */
+
+.section-title {
+  @apply text-sm font-semibold text-gray-800 mb-4;
+}
+
+/* ======================================================
+   GRID HELPERS
+====================================================== */
+
+.grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+.grid-3 {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.grid-4 {
+  @apply grid grid-cols-1 md:grid-cols-4 gap-6;
+}
+
+/* ======================================================
+   BUTTONS
+====================================================== */
+
+.btn-primary {
+  @apply h-10 px-6 rounded-md bg-[#1F3A63] text-white text-sm
+         hover:bg-[#162d4f] transition;
+}
+
+.btn-outline {
+  @apply h-10 px-4 rounded-md border border-[#1F3A63]
+         text-[#1F3A63] bg-white text-sm
+         hover:bg-gray-50 transition;
+}
