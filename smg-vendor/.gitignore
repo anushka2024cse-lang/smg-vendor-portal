@@ -24,3 +24,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Additional local build output and environment files
+build/
+out/
+.env
+.env.*
+*.tar.gz
