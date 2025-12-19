@@ -26,3 +26,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Additional ignores added to prevent committing local build artifacts,
+# environment configuration files, and compressed archives
+build/
+out/
+.env
+.env.*
+*.tar.gz
