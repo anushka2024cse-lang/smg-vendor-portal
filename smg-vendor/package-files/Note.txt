@@ -1,0 +1,16 @@
+Package File Note
+
+This folder contains a package.json and package-lock.json used for
+vendor list, vendor details, and component-related features.
+
+The package.json included here contains the dependencies required for
+these features and includes both frontend- and backend-related packages.
+React 18 was used for stability and compatibility during development.
+
+The package.json and package-lock.json present outside this folder use
+React 19 and are intended for frontend usage. Kindly choose or apply
+changes to the package files based on project requirements.
+
+Before running the project, please ensure that:
+- Only one package.json and one package-lock.json exist in the root directory
+- There are no duplicate package files that could cause dependency or version conflicts
