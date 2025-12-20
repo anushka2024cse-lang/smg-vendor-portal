@@ -71,12 +71,7 @@ const HomePage = () => {
                 </div>
             </div>
 
-            {/* Floating Theme Toggle (Visual only based on screenshot bottom right) - keeping as is but ensuring colors work */}
-            <div className="fixed bottom-8 right-8">
-                <div className="bg-card p-3 rounded-full border border-border text-muted-foreground hover:text-card-foreground cursor-pointer shadow-lg">
-                    <Moon size={20} />
-                </div>
-            </div>
+
         </div>
     );
 };

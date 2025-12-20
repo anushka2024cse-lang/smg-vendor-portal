@@ -121,7 +121,8 @@ dist
 
 GITHUB_ACCESS_INSTRUCTIONS.md
 
-# Backend specific ignores
-backend/node_modules
-backend/.env
+
+# Backend Directory (Local Only - Do Not Commit)
+backend/
+
 

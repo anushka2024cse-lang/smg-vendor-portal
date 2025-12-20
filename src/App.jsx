@@ -17,9 +17,12 @@ import Inventory from './pages/Inventory/Inventory';
 import Models from './pages/Models/Models';
 import ComponentDetails from './pages/ComponentDetails/ComponentDetails';
 
+import ThemeToggle from './components/ThemeToggle';
+
 function App() {
     return (
         <BrowserRouter>
+            <ThemeToggle />
             <Routes>
                 <Route path="/login" element={<Login />} />
 
