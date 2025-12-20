@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockProductionHistory } from '../mocks/productionData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const productionService = {
     getHistory: async () => {

@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockMaterialReceipts, mockMaterialDispatches } from '../mocks/materialData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const materialService = {
     // Receiving

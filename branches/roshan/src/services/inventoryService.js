@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockInventoryData } from '../mocks/inventoryData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const inventoryService = {
     getAllInventory: async () => {

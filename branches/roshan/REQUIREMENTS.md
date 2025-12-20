@@ -61,6 +61,7 @@ The **SMG Vendor Portal (MMP)** is a comprehensive web application designed to s
 - **Frontend**: React 19, Vite, Tailwind CSS 4.
 - **State Management**: React Hooks (useState, useEffect, useMemo).
 - **Network**: Axios for API communication (configured for JWT Auth).
+- **Configuration**: Centralized `config.js` for managing environments (Mock vs Live) via `.env`.
 
 ## 4. Backend Dependencies (Recommended)
 To fully power this frontend, the backend must support:

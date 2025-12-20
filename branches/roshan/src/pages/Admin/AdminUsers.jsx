@@ -6,6 +6,8 @@ const AdminUsers = () => {
     const [users, setUsers] = useState([]);
     const [activeActionId, setActiveActionId] = useState(null);
     const [editModalUser, setEditModalUser] = useState(null);
+    const [createModalOpen, setCreateModalOpen] = useState(false); // State for Create User Modal
+    const [newUser, setNewUser] = useState({ name: '', email: '', role: 'User', password: '' });
     const actionMenuRef = useRef(null);
 
     useEffect(() => {
@@ -20,7 +22,6 @@ const AdminUsers = () => {
         fetchUsers();
     }, []);
 
-    // Close action menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
@@ -37,13 +38,12 @@ const AdminUsers = () => {
     };
 
     const handleEditClick = (user) => {
-        setEditModalUser({ ...user }); // Create a copy to edit
+        setEditModalUser({ ...user });
         setActiveActionId(null);
     };
 
     const handlePrintClick = (user) => {
         setActiveActionId(null);
-        // Open a simple printable window
         const printWindow = window.open('', '_blank', 'width=800,height=600');
         printWindow.document.write(`
             <html>
@@ -75,16 +75,30 @@ const AdminUsers = () => {
     const handleDeleteClick = (user) => {
         setActiveActionId(null);
         if (window.confirm(`Are you sure you want to delete ${user.name}?`)) {
-            // Logic to delete would go here
             setUsers(users.filter(u => u.id !== user.id));
         }
     };
 
     const handleSaveEdit = () => {
         if (!editModalUser) return;
-        // Update the local state to reflect changes
         setUsers(users.map(u => u.id === editModalUser.id ? editModalUser : u));
         setEditModalUser(null);
+    };
+
+    const handleCreateUser = async () => {
+        if (!newUser.name || !newUser.email || !newUser.password) {
+            alert("Please fill in all fields.");
+            return;
+        }
+        try {
+            const createdUser = await adminService.createUser(newUser);
+            setUsers([...users, createdUser]);
+            setCreateModalOpen(false);
+            setNewUser({ name: '', email: '', role: 'User', password: '' });
+        } catch (error) {
+            console.error("Failed to create user", error);
+            alert("Failed to create user");
+        }
     };
 
     return (
@@ -94,7 +108,10 @@ const AdminUsers = () => {
                     <p className="text-sm text-slate-400 font-medium">User Management</p>
                     <h1 className="text-2xl font-bold text-white">All Users</h1>
                 </div>
-                <button className="flex items-center gap-2 bg-slate-200 text-slate-900 px-4 py-2 rounded-lg font-bold hover:bg-white transition-colors text-sm">
+                <button
+                    onClick={() => setCreateModalOpen(true)}
+                    className="flex items-center gap-2 bg-slate-200 text-slate-900 px-4 py-2 rounded-lg font-bold hover:bg-white transition-colors text-sm"
+                >
                     <Plus size={18} />
                     <span>Create User</span>
                 </button>
@@ -142,7 +159,6 @@ const AdminUsers = () => {
                                             <MoreHorizontal size={18} />
                                         </button>
 
-                                        {/* Dropdown Menu */}
                                         {activeActionId === user.id && (
                                             <div
                                                 ref={actionMenuRef}
@@ -179,6 +195,92 @@ const AdminUsers = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Create User Modal */}
+            {createModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-[#1f2533] w-full max-w-2xl rounded-xl border border-slate-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 p-6 border-b border-slate-800">
+                            <button
+                                onClick={() => setCreateModalOpen(false)}
+                                className="p-2 bg-[#1E293B] rounded-lg hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+                            >
+                                <ArrowLeft size={18} />
+                            </button>
+                            <h2 className="text-xl font-bold text-white">Create New User</h2>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-8">
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+                                    <input
+                                        type="text"
+                                        value={newUser.name}
+                                        onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="e.g. John Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                                    <input
+                                        type="email"
+                                        value={newUser.email}
+                                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="e.g. john@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                                    <input
+                                        type="password"
+                                        value={newUser.password}
+                                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        placeholder="Enter secure password"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Role</label>
+                                    <div className="relative">
+                                        <select
+                                            value={newUser.role}
+                                            onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                                            className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 cursor-pointer"
+                                        >
+                                            <option value="User">User</option>
+                                            <option value="Admin">Admin</option>
+                                            <option value="Super Admin">Super Admin</option>
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                            <ChevronDown size={16} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setCreateModalOpen(false)}
+                                    className="px-6 py-2.5 rounded-lg font-medium text-slate-400 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleCreateUser}
+                                    className="bg-slate-200 hover:bg-white text-slate-900 px-6 py-2.5 rounded-lg font-bold transition-colors"
+                                >
+                                    Create User
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Edit User Modal */}
             {editModalUser && (

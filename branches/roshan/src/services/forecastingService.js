@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockForecastResult } from '../mocks/forecastingData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const forecastingService = {
     generateForecast: async (params) => {

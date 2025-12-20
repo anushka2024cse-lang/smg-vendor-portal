@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockUsers, mockCurrentUser } from '../mocks/adminData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const adminService = {
     getAllUsers: async () => {

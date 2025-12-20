@@ -3,7 +3,7 @@ import { ENDPOINTS } from './endpoints';
 import { mockDashboardMetrics, mockInventoryChartData, mockStockDistributionData, mockLowStockItems } from '../mocks/dashboardData';
 
 // Toggle to use mock data easily (Set to false when backend is ready)
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const dashboardService = {
     getMetrics: async () => {

@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockVendors, mockVendorHistory } from '../mocks/vendorData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const vendorService = {
     getAllVendors: async () => {

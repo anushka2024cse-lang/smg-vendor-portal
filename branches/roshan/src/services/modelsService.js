@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockModelsData } from '../mocks/modelsData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const modelsService = {
     getAllModels: async () => {

@@ -1,134 +1,155 @@
-# SMG Vendor Portal - Roshan Branch
+# SMG Vendor Portal (MMP) - Roshan Branch
 
-## 🚀 Branch Overview
-This branch (`roshan`) contains the **Frontend** implementation of the SMG Vendor Portal, built with the latest modern web technologies. It focuses on a high-fidelity dark-themed UI, modular component architecture, and comprehensive admin/support features.
+![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-14+-43853D?style=for-the-badge&logo=node.js&logoColor=white)
 
-### 🛠️ Frontend Tech Stack
-- **Framework**: React 19
-- **Build Tool**: Vite 6+
-- **Styling**: Tailwind CSS 4
-- **Icons**: Lucide React
-- **Charts**: Recharts
-- **Data Export**: XLSX (SheetJS)
-- **HTTP Client**: Axios
+## 📖 Project Overview
+
+The **SMG Vendor Portal (Material Management Portal)** is a high-fidelity web application designed to streamline supply chain operations. This branch (`roshan`) implements the **Frontend UI** with a focus on modern aesthetics (Dark Mode), modular architecture, and comprehensive administrative features.
+
+### ✨ Key Features
+- **📊 Interactive Dashboard**: Real-time analytics, inventory charts, and stock value tracking.
+- **📦 Inventory Management**: Complete CRUD operations for parts, including Receipt (GRN) and Dispatch workflows.
+- **🏭 Production Planning**: Production history logging and AI-powered forecasting inputs.
+- **🛡️ Admin Suite**: User management with custom roles, secure profile views, and activity logs.
+- **🎧 Support Center**: Integrated ticketing system with status tracking and FAQ knowledge base.
+- **🎨 Modern UI/UX**: Fully responsive Dark Theme using Tailwind CSS v4 and Lucide icons.
 
 ---
 
-## 🏗️ Backend Implementation & Structure
+## 🛠️ Tech Stack
 
-To support this frontend, you need a Node.js & Express.js backend. Below is the recommended structure and setup guide.
+| Domain | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 19 | Component-based UI library |
+| **Bundler** | Vite 6+ | Next-generation frontend tooling |
+| **Styling** | Tailwind CSS 4 | Utility-first CSS framework |
+| **Icons** | Lucide React | Clean and consistent icon set |
+| **Visualization** | Recharts | Composable charting library |
+| **HTTP Client** | Axios | Promise-based HTTP client for browser/node |
+| **Data Export** | XLSX (SheetJS) | Spreadsheet parser and generator |
 
-### 1. Recommended Project Structure
+---
+
+## 📂 Project Structure
+
 ```text
-backend/
-├── src/
-│   ├── config/
-│   │   └── db.js           # Database connection (MongoDB/PostgreSQL)
-│   ├── controllers/        # Request logic (e.g., authController.js)
-│   ├── middleware/         # Auth & Error handling (authMiddleware.js)
-│   ├── models/             # Database Schemas (User.js, Ticket.js)
-│   ├── routes/             # API Routes (authRoutes.js, adminRoutes.js)
-│   └── app.js              # Express App setup
-├── .env                    # Environment variables (PORT, DB_URI, JWT_SECRET)
-├── package.json
-└── server.js               # Entry point
+src/
+├── global/
+│   └── components/   # Application-wide UI (Sidebar, Layouts, Buttons)
+├── pages/
+│   ├── Admin/        # User Management & Admin Settings
+│   ├── Inventory/    # Stock Levels, Receive, Dispatch
+│   ├── Production/   # Production History & Data Entry
+│   ├── Forecasting/  # AI Prediction Modules
+│   ├── Support/      # Help Center & Ticketing
+│   ├── Vendors/      # Vendor Profiles & Management
+│   └── Dashboard/    # Main Analytics View
+├── services/         # API Integration Layer
+│   ├── apiClient.js  # Axios configurations & Interceptors
+│   ├── endpoints.js  # Centralized API Routes
+│   └── *.service.js  # Module-specific services (admin, inventory, etc.)
+├── mocks/            # Mock Data for development
+└── App.jsx           # Main Router Configuration
 ```
 
-### 2. Setting Up Node.js & Express.js
-Run the following commands in your `backend/` folder:
+---
 
-1.  **Initialize Project**:
-    ```bash
-    npm init -y
-    ```
-2.  **Install Dependencies**:
-    ```bash
-    npm install express cors dotenv mongoose jsonwebtoken bcryptjs
-    npm install --save-dev nodemon
-    ```
-3.  **Configure `server.js`**:
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+
+### 1. Installation
+Clone the repository and install dependencies:
+```bash
+git clone <repository-url>
+cd smg-vendor
+npm install
+```
+
+### 2. Environment Configuration
+Create a `.env` file in the root directory:
+```env
+# Base URL for the Backend API
+VITE_API_BASE_URL=http://localhost:5000/api/v1
+
+# Optional: Enable Mock Data globally (if supported)
+VITE_USE_MOCK=true
+```
+
+### 3. Disabling Mock Data (for Production)
+By default, the application may use mock data for development. To switch to the real backend:
+
+1.  **Update Environment**: Ensure `VITE_USE_MOCK=false` in your `.env` file.
+2.  **Service Config**: Check `src/services/*.service.js` and set the mock flag to false:
     ```javascript
-    require('dotenv').config();
+    // In src/services/adminService.js (and others)
+    const USE_MOCK = false; 
+    ```
+    *This ensures the app communicates directly with your `VITE_API_BASE_URL`.*
+
+### 4. Running the Frontend
+Start the development server:
+```bash
+npm run dev
+```
+Access the app at `http://localhost:5173`.
+
+---
+
+## 🔗 Backend Integration
+
+To power this frontend, a **Node.js + Express** backend is required.
+
+### Recommended Backend Setup
+
+1.  **Initialize**: `npm init -y` inside a `backend/` folder.
+2.  **Install**: `npm i express cors dotenv mongoose jsonwebtoken`
+3.  **Server Entry (`server.js`)**:
+    ```javascript
     const express = require('express');
     const cors = require('cors');
     const app = express();
 
-    app.use(cors());
+    app.use(cors()); // Enable CORS for frontend access
     app.use(express.json());
 
-    // Import Routes
-    app.use('/api/v1/auth', require('./src/routes/authRoutes'));
-    app.use('/api/v1/admin', require('./src/routes/adminRoutes'));
-    // ... load other routes
+    // Define Routes
+    app.use('/api/v1/auth', require('./routes/auth'));
+    app.use('/api/v1/admin', require('./routes/admin'));
+    // ... other routes
 
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(5000, () => console.log('Server running on port 5000'));
     ```
-4.  **Start Server**:
-    ```bash
-    npx nodemon server.js
-    ```
+
+### � API Endpoints Reference
+
+Ensure your backend implements these core endpoints defined in `src/services/endpoints.js`.
+
+| Module | Endpoint | Method | Description |
+| :--- | :--- | :--- | :--- |
+| **Auth** | `/auth/login` | POST | Authenticate user & return JWT |
+| | `/auth/me` | GET | Validates token & returns profile |
+| **Dashboard** | `/dashboard/metrics` | GET | Stats cards (Total Stock, Value) |
+| | `/dashboard/inventory-chart` | GET | Data for main line chart |
+| **Inventory** | `/materials/receive` | POST | Create GRN (Good Receipt Note) |
+| | `/materials/dispatch` | POST | Create Material Issue Slip |
+| **Admin** | `/admin/users` | GET | List all users |
+| | `/admin/users` | POST | Create new Admin/User |
+| **Support** | `/support/tickets` | GET | Fetch support tickets |
 
 ---
 
-## 🔌 API Endpoints Reference
+## 🤝 Contributing
 
-The frontend expects the following RESTful API endpoints. Ensure your backend routes match these paths (configured via `.env` `VITE_API_BASE_URL`).
-
-### **Authentication**
-| Method | Endpoint | Description | Payload |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | User login | `{ email, password }` |
-| `GET` | `/auth/me` | Get current user profile | `Headers: { Authorization: Bearer <token> }` |
-
-### **Dashboard**
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/dashboard/metrics` | Key performance indicators (Total Stock, Value) |
-| `GET` | `/dashboard/inventory-chart` | Data for main dashboard chart |
-| `GET` | `/dashboard/stock-distribution` | Pie chart data for stock categories |
-| `GET` | `/dashboard/low-stock` | List of items below reorder level |
-
-### **Admin & Users**
-| Method | Endpoint | Description | Payload |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/admin/users` | List all system users | - |
-| `POST` | `/admin/users` | Create a new user | `{ name, email, password, role }` |
-
-### **Inventory & Materials**
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/inventory` | Full inventory list |
-| `GET` | `/models` | List of defined product models |
-| `POST` | `/materials/receive` | Process new inbound material |
-| `POST` | `/materials/dispatch` | Process outbound material dispatch |
-
-### **Production & Forecasting**
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/production/history` | Historical production data |
-| `POST` | `/production/generate` | Trigger production planning calculation |
-| `POST` | `/forecasting/generate` | Trigger AI stock prediction |
-
-### **Vendors**
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/vendors` | List of all registered vendors |
-| `GET` | `/vendors/:id` | Detailed view of a specific vendor |
+1.  Create a Feature Branch (`git checkout -b feature/AmazingFeature`)
+2.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+3.  Push to the Branch (`git push origin feature/AmazingFeature`)
+4.  Open a Pull Request
 
 ---
-
-## 🏃‍♂️ How to Run the Frontend
-
-1.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-2.  **Start Development Server**:
-    ```bash
-    npm run dev
-    ```
-3.  **Build for Production**:
-    ```bash
-    npm run build
-    ```
+*Maintained by Roshan Branch Team*

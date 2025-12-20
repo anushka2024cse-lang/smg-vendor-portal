@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
 import { mockComponentsData } from '../mocks/componentData';
 
-const USE_MOCK = true;
+import { USE_MOCK } from './config';
 
 export const componentService = {
     getAllComponents: async () => {
