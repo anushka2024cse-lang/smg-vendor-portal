@@ -1,4 +1,5 @@
-# SMG Vendor Portal (MMP) - Roshan Branch
+# SMG Vendor Portal (MMP)
+
 
 ![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)
@@ -7,7 +8,7 @@
 
 ## 📖 Project Overview
 
-The **SMG Vendor Portal (Material Management Portal)** is a high-fidelity web application designed to streamline supply chain operations. This branch (`roshan`) implements the **Frontend UI** with a focus on modern aesthetics (Dark Mode), modular architecture, and comprehensive administrative features.
+The **SMG Vendor Portal (Material Management Portal)** is a high-fidelity web application designed to streamline supply chain operations. This codebase implements the **Frontend UI** with a focus on modern aesthetics (Dark Mode), modular architecture, and comprehensive administrative features.
 
 ### ✨ Key Features
 - **📊 Interactive Dashboard**: Real-time analytics, inventory charts, and stock value tracking.
@@ -152,4 +153,4 @@ Ensure your backend implements these core endpoints defined in `src/services/end
 4.  Open a Pull Request
 
 ---
-*Maintained by Roshan Branch Team*
+*Maintained by SMG Development Team*
