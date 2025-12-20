@@ -37,6 +37,7 @@ const Sidebar = () => {
         { icon: FileText, label: 'Policies' },
         { icon: Building2, label: 'Facilities' },
         { icon: User, label: 'Profile' },
+        { icon: FileText, label: 'Statement of Requirements', path: '/sor' },
     ];
 
     return (
