@@ -1,141 +1,199 @@
-# 🔌 Backend Integration & Implementation Guide
+# 📘 SMG Vendor Portal: The Complete Backend Guide
 
-This document provides a comprehensive guide on how to set up the backend for the SMG Vendor Portal and connect it to the React frontend.
+> **Version**: 2.0 (Production Ready)
+> **Stack**: MERN (MongoDB, Express, React, Node.js)
 
-## 1. Frontend Configuration
-
-### Environment Variables
-The frontend uses environment variables to know where to send API requests.
-
-1.  Create a file named `.env` in the root of the frontend (`d:\SMG\branches\roshan\.env`).
-2.  Add the following:
-    ```env
-    # The URL where your backend server is running
-    VITE_API_BASE_URL=http://localhost:5000/api/v1
-    
-    # Set to 'false' to use the Real Backend, 'true' to use Mock Data
-    VITE_USE_MOCK=false
-    ```
-
-### Disabling Mock Mode
-To stop using the fake data and connect to your server:
-1.  Go to `src/services/` and open each service file (e.g., `adminService.js`, `inventoryService.js`).
-2.  Locate `const USE_MOCK = true;`
-3.  Change it to:
-    ```javascript
-    const USE_MOCK = false; 
-    ```
-    *(Ideally, this should eventually be controlled solely by `import.meta.env.VITE_USE_MOCK`)*
+This document is the **single source of truth** for building, securing, and deploying the backend of the SMG Vendor Portal. It combines architectural blueprints with step-by-step implementation instructions.
 
 ---
 
-## 2. Backend Implementation (Node.js + Express)
+## 🏗️ Part 1: Architecture & Design
 
-### Prerequisites
-- Node.js installed (v16+ recommended).
-- MongoDB installed locally or a cloud Atlas URI.
+### 1.1 High-Level Architecture
 
-### Step 1: Initialize Project
-Create a new folder `backend` outside of the frontend source (or in the root if monorepo).
-```bash
-mkdir backend
-cd backend
-npm init -y
-npm install express cors dotenv mongoose jsonwebtoken bcryptjs
-npm install --save-dev nodemon
+We utilize a **Service-Oriented Architecture** where the React Frontend communicates with a stateless Node.js REST API, which persists data to a MongoDB Cloud Cluster.
+
+```mermaid
+graph TD
+    User[User / Vendor] --> Client[React Frontend]
+    Client -- "HTTPS / JSON (JWT)" --> API[Express REST API]
+    
+    subgraph "Backend Infrastructure"
+        API --> Auth[Auth Middleware]
+        Auth --> Controller[Business Logic]
+        Controller --> Mongoose[Data Models]
+        Mongoose --> DB[(MongoDB Atlas)]
+    end
+    
+    subgraph "External Services"
+        Client --> Storage[Firebase Storage (Images)]
+        API --> Mail[Email Service (Optional)]
+    end
 ```
 
-### Step 2: Server Entry Point (`server.js`)
-Create `server.js` with the following basic structure:
+### 1.2 Database Schema Design
 
+Structure of our NoSQL Collections.
+
+#### `users` Collection
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `name` | String | Full Name |
+| `email` | String | Unique Login Email (Indexed) |
+| `password` | String | Bcrypt Hashed Password |
+| `role` | Enum | `Super Admin`, `Admin`, `User`, `Vendor` |
+| `status` | Enum | `Active`, `Suspended` |
+
+#### `inventory` Collection
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `name` | String | Item Name (e.g. "Brake Pad") |
+| `sku` | String | Stock Keeping Unit (Unique) |
+| `quantity` | Number | Current physical count |
+| `location` | String | Warehouse Bin ID |
+| `minLevel` | Number | Low stock alert threshold |
+| `category` | String | e.g. "Raw Material", "Finished Goods" |
+
+#### `transactions` Collection (Audit Trail)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `type` | Enum | `RECEIPT` (GRN) or `DISPATCH` (Issue) |
+| `items` | Array | List of `{ itemId, qty }` |
+| `user` | ObjectId | Reference to `users` who performed action |
+| `reference`| String | PO Number or Job Card ID |
+| `date` | Date | Timestamp |
+
+---
+
+## 🛠️ Part 2: Implementation Guide (Step-by-Step)
+
+### Phase 1: Environment Setup
+
+#### 1. Dependencies
+The `backend/` folder requires these specific packages:
+```bash
+cd backend
+npm install express mongoose cors dotenv helmet morgan jsonwebtoken bcryptjs express-validator
+npm install --save-dev nodemon
+```
+- **Security**: `helmet` (headers), `bcryptjs` (hashing).
+- **Utils**: `morgan` (logging), `cors` (cross-origin).
+
+#### 2. Configuration (`.env`)
+Create `backend/.env` with your secrets:
+```env
+PORT=5000
+NODE_ENV=development
+# Get this from MongoDB Atlas
+MONGO_URI=mongodb+srv://admin:password@cluster.mongodb.net/smg_portal
+# Generate a random 32-char string
+JWT_SECRET=super_secret_key_change_me_in_prod
+```
+
+### Phase 2: Core Server Structure
+
+#### 1. Database Connection (`config/db.js`)
+```javascript
+const mongoose = require('mongoose');
+
+const connectDB = async () => {
+    try {
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        process.exit(1);
+    }
+};
+module.exports = connectDB;
+```
+
+#### 2. Server Entry Point (`server.js`)
 ```javascript
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
+const connectDB = require('./config/db');
+// ... middleware imports
+
+// Connect DB
+connectDB();
+
 const app = express();
-
-// Middleware
-app.use(cors()); // Allow requests from Frontend
 app.use(express.json()); // Parse JSON bodies
+app.use(require('cors')());
+app.use(require('helmet')());
 
-// Database Connection
-mongoose.connect(process.env.DB_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
-
-// Routes
-app.use('/api/v1/auth', require('./src/routes/auth'));
-app.use('/api/v1/admin', require('./src/routes/admin'));
-app.use('/api/v1/inventory', require('./src/routes/inventory'));
+// Mount Routes
+app.use('/api/v1/auth', require('./routes/authRoutes'));
+app.use('/api/v1/inventory', require('./routes/inventoryRoutes'));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server started on ${PORT}`));
 ```
 
----
+### Phase 3: Security & Authentication
 
-## 3. Required API Endpoints
+#### 1. User Model (`models/User.js`)
+Implement `pre('save')` hooks to hash passwords automatically.
 
-Your backend **MUST** implement these endpoints to match the frontend calls defined in `src/services/endpoints.js`.
-
-### 🔐 Authentication (`/api/v1/auth`)
-| Method | Endpoint | Description | Expected Body | Response |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/login` | User Login | `{email, password}` | `{ user, token }` |
-| `GET` | `/me` | Verify Token | `Header: Bearer <token>` | `{ user }` |
-
-### 🛡️ Admin (`/api/v1/admin`)
-| Method | Endpoint | Description | Expected Body |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/users` | Get all users | - |
-| `POST` | `/users` | Create User | `{name, email, password, role}` |
-| `PUT` | `/users/:id` | Update User | `{name, email, role}` |
-| `DELETE`| `/users/:id` | Delete User | - |
-
-### 📦 Inventory & Materials
-| Method | Endpoint | Description | Expected Body |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/inventory` | List Items | - |
-| `POST` | `/inventory` | Add Item | `{name, sku, category, qty...}` |
-| `POST` | `/materials/receive` | GRN Entry | `{poId, items: [{id, qty}]}` |
-| `POST` | `/materials/dispatch` | Dispatch | `{destination, items: [...]}` |
-
-### 🛠️ Support
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/support/tickets` | List Tickets |
-| `POST` | `/support/tickets` | Create Ticket |
-
----
-
-## 4. Authentication Logic (JWT)
-
-The frontend's `apiClient.js` automatically handles JWTs.
-1.  **On Login**: The backend must return a JSON object with a `token`.
-    ```json
-    {
-      "token": "eyJhbGciOiJIUzI1NiIs...",
-      "user": { "id": "1", "name": "Admin" }
-    }
-    ```
-2.  **On Requests**: The frontend sends `Authorization: Bearer <token>`.
-3.  **Backend Verification**: Use a middleware to verify this token for protected routes.
-
+#### 2. Auth Middleware (`middleware/auth.js`)
+Protect routes by verifying the JWT token sent in headers.
 ```javascript
-// middleware/auth.js
 const jwt = require('jsonwebtoken');
 
 module.exports = function(req, res, next) {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    if (!token) return res.status(401).send('Access Denied');
+    const token = req.header('Authorization')?.split(' ')[1]; // Bearer <token>
+    if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
 
     try {
-        const verified = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = verified;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded.user;
         next();
     } catch (err) {
-        res.status(400).send('Invalid Token');
+        res.status(401).json({ msg: 'Token is not valid' });
     }
 };
 ```
+
+### Phase 4: Business Logic (Service Layer)
+
+#### 1. Inventory Logic (`controllers/inventoryController.js`)
+*   **Get All**: Support pagination (`?page=1&limit=10`).
+*   **Receive Material**:
+    *   Validate PO Number.
+    *   Create `Transaction` record (`type: RECEIPT`).
+    *   Increment `Inventory` count using `$inc`.
+*   **Dispatch Material**:
+    *   Check `Stock >= Requested`.
+    *   Create `Transaction` record (`type: DISPATCH`).
+    *   Decrement `Inventory`.
+
+---
+
+## 🚀 Part 3: Deployment & Integration
+
+### 3.1 Frontend Integration
+In your React app (`src/services/config.js`), point to the production API:
+1.  Set `VITE_USE_MOCK=false` in `.env`.
+2.  Set `VITE_API_BASE_URL=https://your-backend-app.onrender.com/api/v1`.
+
+### 3.2 Deployment Checklist (Go Live)
+
+1.  **Database**:
+    *   Whitelisting: In MongoDB Atlas, allow IP `0.0.0.0/0` (or specific Render IP).
+    *   User: Ensure `smg_admin` user has `readWrite` access.
+2.  **Backend (Render/Heroku/Railway)**:
+    *   Set Environment Variables (`MONGO_URI`, `JWT_SECRET`, `NODE_ENV=production`) in the dashboard.
+    *   Build Command: `npm install`.
+    *   Start Command: `node server.js`.
+3.  **Frontend (Vercel/Netlify)**:
+    *   Build Command: `npm run build`.
+    *   Output Directory: `dist`.
+    *   Environment Variable: `VITE_API_BASE_URL` pointing to your Backend URL.
+
+---
+
+## 🔮 Future Roadmap
+*   **Email Notifications**: Send alerts via SendGrid when stock < minLevel.
+*   **Role-Based Access Control (RBAC)**: Fine-grained permissions (e.g., only "Manager" can approve POs).
+*   **Audit Logs**: detailed logging of user IP addresses and actions.
