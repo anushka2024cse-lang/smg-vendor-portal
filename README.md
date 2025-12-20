@@ -11,7 +11,7 @@
 The **SMG Vendor Portal (Material Management Portal)** is a high-fidelity web application designed to streamline supply chain operations. This codebase implements the **Frontend UI** with a focus on modern aesthetics (Dark Mode), modular architecture, and comprehensive administrative features.
 
 ### ✨ Key Features
-- **📊 Interactive Dashboard**: Real-time analytics, inventory charts, and stock value tracking.
+- **📊 Interactive Dashboard**: Real-time analytics, inventory charts, and stock value tracking
 - **📦 Inventory Management**: Complete CRUD operations for parts, including Receipt (GRN) and Dispatch workflows.
 - **🏭 Production Planning**: Production history logging and AI-powered forecasting inputs.
 - **🛡️ Admin Suite**: User management with custom roles, secure profile views, and activity logs.
