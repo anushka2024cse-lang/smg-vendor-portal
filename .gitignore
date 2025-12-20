@@ -124,5 +124,6 @@ GITHUB_ACCESS_INSTRUCTIONS.md
 
 # Backend Directory (Local Only - Do Not Commit)
 backend/
+.backend
 
 
