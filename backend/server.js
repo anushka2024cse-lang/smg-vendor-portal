@@ -98,6 +98,9 @@ app.use('/api/v1/components', require('./routes/components'));
 app.use('/api/v1/sor', require('./routes/sor'));
 app.use('/api/v1/notifications', require('./routes/notification'));
 app.use('/api/v1/warranty', require('./routes/warranty'));
+app.use('/api/v1/orders', require('./routes/order'));
+app.use('/api/v1/payments', require('./routes/payment'));
+app.use('/api/v1/certificates', require('./routes/certificate'));
 
 // Error Handling Middleware (must be last)
 const { errorHandler, notFound } = require('./middleware/errorHandler');

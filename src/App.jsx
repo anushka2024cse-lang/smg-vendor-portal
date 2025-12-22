@@ -30,6 +30,8 @@ import AdminNotifications from './pages/Admin/AdminNotifications';
 import WarrantyClaimsList from './pages/WarrantyClaims/WarrantyClaimsList';
 import WarrantyClaimForm from './pages/WarrantyClaims/WarrantyClaimForm';
 import WarrantyClaimDetails from './pages/WarrantyClaims/WarrantyClaimDetails';
+import OrderHistory from './pages/Orders/OrderHistory';
+import CertificateList from './pages/Certificates/CertificateList';
 
 import ProtectedRoute from './global/components/ProtectedRoute';
 import { ToastProvider } from './contexts/ToastContext';
@@ -68,6 +70,8 @@ function App() {
                             <Route path="/sor/workspace" element={<Navigate to="/sor/list" replace />} />
                             <Route path="/sor/workspace/:id" element={<SORWorkspace />} />
                             <Route path="/payments" element={<PaymentList />} />
+                            <Route path="/orders" element={<OrderHistory />} />
+                            <Route path="/certificates" element={<CertificateList />} />
 
                             {/* Operations */}
                             <Route path="/production" element={<Production />} />
