@@ -59,15 +59,22 @@ export const authService = {
     },
 
     updateProfile: async (userData) => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-
         try {
-            const currentUser = authService.getCurrentUser() || {};
-            const updatedUser = { ...currentUser, ...userData };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            return updatedUser;
-        } catch (e) {
-            throw new Error("Failed to update profile locally");
+            const response = await apiClient.put('/auth/profile', userData);
+
+            // Update localStorage with new data
+            if (response.data.user) {
+                const currentUser = authService.getCurrentUser() || {};
+                const updatedUser = { ...currentUser, ...response.data.user };
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                console.log('✅ Profile updated:', updatedUser);
+                return updatedUser;
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('❌ Profile update failed:', error);
+            throw new Error(error.response?.data?.message || "Failed to update profile");
         }
     },
 
