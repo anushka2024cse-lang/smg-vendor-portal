@@ -124,7 +124,26 @@ GITHUB_ACCESS_INSTRUCTIONS.md
 
 # Backend Directory (Local Only - Do Not Commit)
 
+implementation_plan.md
 
 
-.reffernce
-reffernce/
+.reference
+reference/
+
+# Temporary / Automation Files
+*.ps1
+temp_*.txt
+test-*.json
+analysis_log.txt
+cleanup_report.md
+codebase_analysis.md
+
+# Local Documentation & Guides
+
+GITHUB_ACCESS_INSTRUCTIONS.md
+MESSAGING_OPTIONS.md
+REQUIREMENTS.md
+implementation_plan.md*
+docs/tomorrow_tasks.md
+docs/*_FIXES.md
+
