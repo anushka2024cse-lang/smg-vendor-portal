@@ -44,6 +44,32 @@ app.use(cors({
 app.use(helmet());
 app.use(morgan('dev'));
 
+// Rate Limiting
+const rateLimit = require('express-rate-limit');
+
+// General API rate limiter
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Auth rate limiter (stricter)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per windowMs
+    message: 'Too many login attempts, please try again after 15 minutes',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply rate limiting to all /api routes
+app.use('/api/', apiLimiter);
+app.use('/api/v1/auth/login', authLimiter);
+app.use('/api/v1/auth/register', authLimiter);
+
 // Basic Health Check
 app.get('/', (req, res) => {
     res.json({ message: 'SMG Vendor Portal API is running successfully!' });

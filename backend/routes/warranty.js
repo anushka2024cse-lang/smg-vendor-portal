@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const {
+    createWarrantyClaimValidator,
+    warrantyIdValidator
+} = require('../middleware/validators');
+const {
     getAllClaims,
     createClaim,
     approveClaim,
@@ -11,9 +15,9 @@ const {
 // Protected routes
 router.route('/')
     .get(protect, getAllClaims)
-    .post(protect, createClaim);
+    .post(protect, createWarrantyClaimValidator, createClaim);
 
-router.put('/:id/approve', protect, authorize('admin', 'vendorManager'), approveClaim);
-router.put('/:id/reject', protect, authorize('admin', 'vendorManager'), rejectClaim);
+router.put('/:id/approve', protect, authorize('admin', 'vendorManager'), warrantyIdValidator, approveClaim);
+router.put('/:id/reject', protect, authorize('admin', 'vendorManager'), warrantyIdValidator, rejectClaim);
 
 module.exports = router;

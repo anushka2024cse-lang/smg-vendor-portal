@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const {
+    createSORValidator,
+    updateSORValidator,
+    sorIdValidator
+} = require('../middleware/validators');
+const {
     getAllSORs,
     getSOR,
     createSOR,
@@ -12,19 +17,20 @@ const {
     getSORHistory
 } = require('../controllers/sorController');
 
+
 // Basic CRUD routes
 router.route('/')
     .get(getAllSORs)
-    .post(protect, createSOR);
+    .post(protect, createSORValidator, createSOR);
 
 router.route('/:id')
-    .get(getSOR)
-    .put(protect, updateSOR)
-    .delete(protect, authorize('admin', 'vendorManager'), deleteSOR);
+    .get(sorIdValidator, getSOR)
+    .put(protect, updateSORValidator, updateSOR)
+    .delete(protect, authorize('admin', 'vendorManager'), sorIdValidator, deleteSOR);
 
 // Workflow routes
-router.post('/:id/submit', protect, submitSOR);
-router.post('/:id/approve', protect, authorize('admin', 'vendorManager'), approveSOR);
-router.get('/:id/history', protect, getSORHistory);
+router.post('/:id/submit', protect, sorIdValidator, submitSOR);
+router.post('/:id/approve', protect, authorize('admin', 'vendorManager'), sorIdValidator, approveSOR);
+router.get('/:id/history', protect, sorIdValidator, getSORHistory);
 
 module.exports = router;

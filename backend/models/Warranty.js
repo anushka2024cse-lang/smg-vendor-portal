@@ -99,4 +99,11 @@ warrantySchema.pre('save', async function (next) {
     next();
 });
 
+// Indexes for performance
+warrantySchema.index({ status: 1 }); // Filter by status
+warrantySchema.index({ claimType: 1 }); // Filter by claim type
+warrantySchema.index({ chassisNumber: 1 }); // Lookup by chassis
+warrantySchema.index({ claimNumber: 1 }); // Lookup by claim number
+warrantySchema.index({ createdAt: -1 }); // Sort by date
+
 module.exports = mongoose.model('Warranty', warrantySchema);
