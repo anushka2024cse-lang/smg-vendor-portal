@@ -1,13 +1,38 @@
-import apiClient from './apiClient';
-import { ENDPOINTS } from './endpoints';
-import { mockComponentsData } from '../mocks/componentData';
+import axios from 'axios';
 
-import { USE_MOCK } from './config';
+const API_URL = 'http://localhost:5000/api/v1/components';
 
-export const componentService = {
-    getAllComponents: async () => {
-        if (USE_MOCK) return Promise.resolve(mockComponentsData);
-        const response = await apiClient.get(ENDPOINTS.COMPONENTS.LIST);
-        return response.data;
-    }
+const getComponents = async () => {
+    const response = await axios.get(API_URL);
+    return response.data;
 };
+
+const getComponent = async (id) => {
+    const response = await axios.get(`${API_URL}/${id}`);
+    return response.data;
+};
+
+const createComponent = async (componentData) => {
+    const response = await axios.post(API_URL, componentData);
+    return response.data;
+};
+
+const updateComponent = async (id, componentData) => {
+    const response = await axios.put(`${API_URL}/${id}`, componentData);
+    return response.data;
+};
+
+const deleteComponent = async (id) => {
+    const response = await axios.delete(`${API_URL}/${id}`);
+    return response.data;
+};
+
+const componentService = {
+    getComponents,
+    getComponent,
+    createComponent,
+    updateComponent,
+    deleteComponent
+};
+
+export default componentService;

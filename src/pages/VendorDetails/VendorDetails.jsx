@@ -1,314 +1,376 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, FileSpreadsheet, History } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+    ChevronLeft,
+    Edit,
+    Wrench,
+    Box,
+    FileText,
+    History,
+    Package,
+    Calendar,
+    MapPin,
+    Building,
+    CreditCard,
+    Mail,
+    Phone,
+    User,
+    CheckCircle,
+    Upload,
+    Download,
+    Loader
+} from 'lucide-react';
+import VendorComponents from '../Vendor/VendorComponents';
+import { vendorService } from '../../services/vendorService';
 
 const VendorDetails = () => {
-    // State for the list of vendors
-    const [vendors, setVendors] = useState([]);
+    const navigate = useNavigate();
+    const { vendorId } = useParams();
+    const [activeTab, setActiveTab] = useState('Overview');
+    const [vendorData, setVendorData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [history, setHistory] = useState([]);
+    const [documents, setDocuments] = useState([]);
 
-    // State for local filtering
-    const [searchTerm, setSearchTerm] = useState('');
+    React.useEffect(() => {
+        const fetchVendor = async () => {
+            try {
+                if (vendorId) {
+                    const [data, historyData, docsData] = await Promise.all([
+                        vendorService.getVendorById(vendorId),
+                        vendorService.getVendorHistory(vendorId),
+                        vendorService.getVendorDocuments(vendorId)
+                    ]);
 
-    // State for new vendor form
-    const [formData, setFormData] = useState({
-        vendorName: '',
-        vendorCode: '',
-        sapCode: '',
-        status: 'Active',
-        email: '',
-        website: '',
-        plantAddress1: '',
-        plantAddress2: '',
-        registeredAddress: '',
-        contactRep1: '',
-        contactNum1: '',
-        contactRep2: '',
-        contactNum2: ''
-    });
-
-    // Mock Data Loading
-    useEffect(() => {
-        const mockData = [
-            {
-                id: 1,
-                name: 'VAC-001',
-                code: 'VR001',
-                status: 'Active',
-                email: 'SMGWLECTRICSCOOTERSLTD@GMAIL.COM',
-                contactPerson: '',
-                sapCode: 'SAP-1001'
-            },
-            {
-                id: 2,
-                name: 'RELIBAL PART.CO',
-                code: 'ROC-01',
-                status: 'Active',
-                email: 'deep_1935@yahoo.co.in',
-                contactPerson: 'VIRENDRA',
-                sapCode: 'SAP-2002'
+                    if (data) {
+                        setVendorData(data);
+                    }
+                    setHistory(historyData || []);
+                    setDocuments(docsData || []);
+                }
+            } catch (error) {
+                console.error("Failed to load vendor details", error);
+            } finally {
+                setLoading(false);
             }
-        ];
-        setVendors(mockData);
-    }, []);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleAddVendor = () => {
-        if (!formData.vendorName || !formData.vendorCode) return;
-
-        const newVendor = {
-            id: Date.now(),
-            name: formData.vendorName,
-            code: formData.vendorCode,
-            status: formData.status,
-            email: formData.email,
-            contactPerson: formData.contactRep1,
-            sapCode: formData.sapCode
         };
 
-        setVendors(prev => [...prev, newVendor]);
-        // Reset form
-        setFormData({
-            vendorName: '',
-            vendorCode: '',
-            sapCode: '',
-            status: 'Active',
-            email: '',
-            website: '',
-            plantAddress1: '',
-            plantAddress2: '',
-            registeredAddress: '',
-            contactRep1: '',
-            contactNum1: '',
-            contactRep2: '',
-            contactNum2: ''
-        });
-    };
+        fetchVendor();
+    }, [vendorId]);
 
-    const handleExport = () => {
-        const ws = XLSX.utils.json_to_sheet(vendors);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Vendor List");
-        XLSX.writeFile(wb, "Vendor_List.xlsx");
-    };
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader className="animate-spin text-blue-900" size={48} />
+            </div>
+        );
+    }
 
-    const filteredVendors = vendors.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (!vendorData) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen text-slate-500">
+                <p className="text-xl font-semibold">Vendor not found</p>
+                <button onClick={() => navigate('/vendor/list')} className="mt-4 text-blue-600 hover:underline">Back to List</button>
+            </div>
+        );
+    }
+
+    const tabs = [
+        { id: 'Overview', label: 'Overview', icon: FileText },
+        { id: 'Components', label: 'Components', icon: Package },
+        { id: 'Documents', label: 'Documents', icon: FileText },
+        { id: 'History', label: 'History', icon: History },
+    ];
 
     return (
-        <div className="p-6 text-muted-foreground w-full">
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-foreground">Vendor Details</h1>
-            </div>
+        <div className="p-8 max-w-7xl mx-auto min-h-screen space-y-6 animate-in fade-in duration-500">
 
-            {/* Vendor Transaction History */}
-            <div className="bg-card p-6 rounded-xl border border-border mb-8">
-                <div className="mb-4">
-                    <h2 className="text-xl font-semibold text-card-foreground">Vendor Transaction History</h2>
-                    <p className="text-sm text-slate-500">Enter a vendor code to view their complete receiving and dispatch history.</p>
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in duration-700">
+                <div>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+                        <span className="cursor-pointer hover:text-blue-900 transition-colors" onClick={() => navigate('/dashboard')}>Home</span>
+                        <span>&gt;</span>
+                        <span className="cursor-pointer hover:text-blue-900 transition-colors" onClick={() => navigate('/vendor/list')}>Vendors</span>
+                        <span>&gt;</span>
+                        <span className="text-slate-900 font-medium">{vendorData.name}</span>
+                    </div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{vendorData.name}</h1>
                 </div>
-
-                <div className="flex gap-4 max-w-2xl">
-                    <div className="relative flex-1">
-                        <input
-                            type="text"
-                            placeholder="Enter a unique vendor code to search"
-                            className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm"
-                        />
-                    </div>
-                    <button className="flex items-center gap-2 bg-slate-200 text-slate-900 px-4 py-2 rounded-md text-sm font-semibold hover:bg-white transition-colors">
-                        <Search size={16} />
-                        <span>Search History</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Add New Vendor Form */}
-            <div className="bg-card p-6 rounded-xl border border-border mb-8">
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-card-foreground">Add New Vendor</h2>
-                    <p className="text-sm text-slate-500">Log new detailed information for a vendor.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                    {/* Row 1 */}
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Vendor Name</label>
-                        <input name="vendorName" value={formData.vendorName} onChange={handleInputChange} type="text" placeholder="e.g. Reliable Parts Co." className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Vendor Code</label>
-                        <input name="vendorCode" value={formData.vendorCode} onChange={handleInputChange} type="text" placeholder="e.g. RPC-001" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">SAP Code</label>
-                        <input name="sapCode" value={formData.sapCode} onChange={handleInputChange} type="text" placeholder="e.g. SAP-98765" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-
-                    {/* Row 2 */}
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Status</label>
-                        <select name="status" value={formData.status} onChange={handleInputChange} className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 text-sm">
-                            <option>Active</option>
-                            <option>Inactive</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Official Email</label>
-                        <input name="email" value={formData.email} onChange={handleInputChange} type="email" placeholder="e.g. contact@rpc.com" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Website</label>
-                        <input name="website" value={formData.website} onChange={handleInputChange} type="text" placeholder="e.g. https://www.rpc.com" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-
-                    {/* Row 3 - Plant Line 1 */}
-                    <div className="col-span-1 md:col-span-3">
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Plant Address (Line 1)</label>
-                        <input name="plantAddress1" value={formData.plantAddress1} onChange={handleInputChange} type="text" placeholder="123 Industrial Way" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-
-                    {/* Row 4 - Plant Line 2 */}
-                    <div className="col-span-1 md:col-span-3">
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Plant Address (Line 2)</label>
-                        <input name="plantAddress2" value={formData.plantAddress2} onChange={handleInputChange} type="text" placeholder="Suite 456, Industrial Park" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-
-                    {/* Row 5 - Registered Office */}
-                    <div className="col-span-1 md:col-span-3">
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Registered Office Address</label>
-                        <input name="registeredAddress" value={formData.registeredAddress} onChange={handleInputChange} type="text" placeholder="1 Legal Avenue, Business City" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-
-                    {/* Row 6 - Contact 1 */}
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Contact Representative (1)</label>
-                        <input name="contactRep1" value={formData.contactRep1} onChange={handleInputChange} type="text" placeholder="e.g. John Doe" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Contact Number (1)</label>
-                        <input name="contactNum1" value={formData.contactNum1} onChange={handleInputChange} type="text" placeholder="e.g. +1 234 567 890" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                    <div className="hidden lg:block"></div> {/* Spacer */}
-
-                    {/* Row 7 - Contact 2 */}
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Contact Representative (2)</label>
-                        <input name="contactRep2" value={formData.contactRep2} onChange={handleInputChange} type="text" placeholder="e.g. Jane Smith" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Contact Number (2)</label>
-                        <input name="contactNum2" value={formData.contactNum2} onChange={handleInputChange} type="text" placeholder="e.g. +1 987 654 321" className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm" />
-                    </div>
-                </div>
-
-                <div className="flex justify-end mt-6">
+                <div className="flex items-center gap-3">
                     <button
-                        onClick={handleAddVendor}
-                        className="flex items-center gap-2 bg-slate-200 text-slate-900 px-4 py-2 rounded-md text-sm font-semibold hover:bg-white transition-colors"
+                        onClick={() => navigate('/vendor/list')}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-all hover:-translate-y-0.5 shadow-sm font-medium"
                     >
-                        <Plus size={16} />
-                        <span>Add Vendor</span>
+                        <ChevronLeft size={18} />
+                        Back
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-all hover:-translate-y-0.5 shadow-md hover:shadow-lg font-medium">
+                        <Edit size={18} />
+                        Edit Vendor
                     </button>
                 </div>
             </div>
 
-            {/* Vendor List */}
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="p-6 border-b border-border">
-                    <h2 className="text-lg font-semibold text-card-foreground mb-1">Vendor List</h2>
-                    <p className="text-sm text-slate-500 mb-4">A list of all vendors with their detailed information.</p>
+            {/* Tabs */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-1 flex gap-2 overflow-x-auto animate-in fade-in duration-700">
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id
+                            ? 'bg-slate-50 text-blue-900 shadow-sm border border-slate-200/60'
+                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                            }`}
+                    >
+                        <tab.icon size={16} className={activeTab === tab.id ? 'text-blue-600' : ''} />
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
-                    <div className="flex justify-between items-center gap-4">
-                        <div className="relative w-full md:w-96">
-                            <input
-                                type="text"
-                                placeholder="Filter by vendor name..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 bg-[#1E293B] border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
-                            />
+            {/* Tab Content */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 min-h-[500px] animate-in fade-in duration-700">
+
+                {/* OVERVIEW TAB */}
+                {activeTab === 'Overview' && (
+                    <div className="space-y-6 animate-in fade-in duration-500">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {/* Company Information Card */}
+                            <div className="bg-slate-50/50 rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow duration-300">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                        <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                                            <Building size={18} className="text-blue-600" />
+                                        </div>
+                                        Company Information
+                                    </h2>
+                                    <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-full border ${vendorData.status === 'Active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                                        {vendorData.status}
+                                    </span>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">Vendor Code</span>
+                                        <span className="text-sm font-bold text-slate-900 col-span-2">{vendorData.id}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">Company Name</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.name}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1 flex items-center gap-2">Contact Person</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.contact}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1 flex items-center gap-2">Email</span>
+                                        <a href={`mailto:${vendorData.email}`} className="text-sm font-medium text-blue-600 hover:underline col-span-2">{vendorData.email}</a>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1 flex items-center gap-2">Phone</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.phone}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Address Details Card */}
+                            <div className="bg-slate-50/50 rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow duration-300">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                        <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                                            <MapPin size={18} className="text-red-500" />
+                                        </div>
+                                        Address Details
+                                    </h2>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">Address</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.address.street}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">City</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.city}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">State</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.address.state}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pb-3 border-b border-slate-100">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">Pincode</span>
+                                        <span className="text-sm font-medium text-slate-900 col-span-2">{vendorData.address.zip}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 pt-1">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">GST Number</span>
+                                        <span className="text-sm font-mono font-medium text-slate-900 col-span-2 bg-slate-100 px-2 py-0.5 rounded w-fit">{vendorData.tax.gst}</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <span className="text-sm font-semibold text-slate-500 col-span-1">PAN Number</span>
+                                        <span className="text-sm font-mono font-medium text-slate-900 col-span-2 bg-slate-100 px-2 py-0.5 rounded w-fit">{vendorData.tax.pan}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <button
-                            onClick={handleExport}
-                            className="flex items-center gap-2 text-slate-300 hover:text-white border border-slate-700 rounded-lg px-3 py-2 text-xs transition-colors"
-                        >
-                            <FileSpreadsheet size={14} />
-                            <span>Export to Excel</span>
-                        </button>
-                    </div>
-                </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-slate-500 uppercase bg-[#1E293B] border-b border-slate-700">
-                            <tr>
-                                <th className="px-6 py-3 font-medium opacity-70">Vendor Name</th>
-                                <th className="px-6 py-3 font-medium opacity-70">Vendor Code</th>
-                                <th className="px-6 py-3 font-medium opacity-70">Status</th>
-                                <th className="px-6 py-3 font-medium opacity-70">Email</th>
-                                <th className="px-6 py-3 font-medium opacity-70">Contact Person</th>
-                                <th className="px-6 py-3 font-medium text-right opacity-70">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800">
-                            {filteredVendors.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                                        No vendors found.
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredVendors.map((vendor) => (
-                                    <tr key={vendor.id} className="hover:bg-[#1E293B]/50 transition-colors">
-                                        <td className="px-6 py-4 font-semibold text-white uppercase">{vendor.name}</td>
-                                        <td className="px-6 py-4 text-slate-400 font-mono uppercase">{vendor.code}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium uppercase ${vendor.status.toLowerCase() === 'active' ? 'bg-[#1E293B] text-slate-300 border border-slate-600' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
-                                                {vendor.status}
+                        {/* Banking Details */}
+                        <div className="bg-slate-50/50 rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow duration-300">
+                            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <div className="p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                                    <CreditCard size={18} className="text-emerald-600" />
+                                </div>
+                                Banking Details
+                            </h2>
+                            <div className="p-8 text-center text-slate-400 text-sm mt-2 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50">
+                                (Secure financial information hidden by default)
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* COMPONENTS TAB - Using Sub-Component */}
+                {activeTab === 'Components' && (
+                    <div className="animate-in fade-in duration-500">
+                        <VendorComponents vendorId={vendorId} />
+                    </div>
+                )}
+
+                {/* DOCUMENTS TAB */}
+                {activeTab === 'Documents' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-6">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                                <FileText size={20} className="text-blue-600" />
+                            </div>
+                            Legal Compliance Documents
+                        </h2>
+
+                        {documents.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {documents.map((doc) => (
+                                    <div key={doc.id} className="group">
+                                        <h3 className="text-sm font-bold text-slate-600 mb-2 flex items-center gap-2 uppercase tracking-wide text-xs">
+                                            {doc.type}
+                                        </h3>
+
+                                        <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center border border-blue-100 shadow-sm">
+                                                    <FileText size={24} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-900">{doc.name}</p>
+                                                    <p className="text-xs text-slate-500 font-medium">PDF Document • 2.4 MB</p>
+                                                </div>
+                                            </div>
+                                            <span className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                                                <CheckCircle size={12} strokeWidth={3} /> {doc.status}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-300 lowercase">{vendor.email}</td>
-                                        <td className="px-6 py-4 text-slate-400 uppercase">{vendor.contactPerson}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="text-slate-500 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors">
-                                                <MoreHorizontal size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                        </div>
+                                    </div>
+                                ))}
 
-                {/* Pagination (Visual only) */}
-                <div className="p-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500">
-                    <span>{filteredVendors.length} row(s) found.</span>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <span>Rows per page</span>
-                            <select className="bg-[#1E293B] border border-slate-700 rounded px-2 py-1 text-white focus:outline-none">
-                                <option>10</option>
-                            </select>
-                        </div>
-                        <span>Page 1 of 1</span>
-                        <div className="flex gap-1">
-                            <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-50" disabled>«</button>
-                            <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-50" disabled>‹</button>
-                            <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-50" disabled>›</button>
-                            <button className="p-1 rounded hover:bg-slate-800 disabled:opacity-50" disabled>»</button>
+                                {/* Upload Placeholder */}
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-600 mb-2 flex items-center gap-2 uppercase tracking-wide text-xs">
+                                        Upload New
+                                    </h3>
+
+                                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-slate-500 bg-slate-50/50 hover:bg-white hover:border-blue-400 hover:text-blue-600 transition-all cursor-pointer group h-[88px]">
+                                        <div className="flex items-center gap-2 font-semibold">
+                                            <Upload size={18} />
+                                            <span>Upload Document</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                <p className="text-slate-400 font-medium">No documents found for this vendor.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* HISTORY TAB */}
+                {activeTab === 'History' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-6">
+                            <div className="p-2 bg-purple-50 rounded-lg">
+                                <History size={20} className="text-purple-600" />
+                            </div>
+                            Activity History
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Tool History Column */}
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 pl-1">
+                                    <Wrench size={14} /> Tool History
+                                </h3>
+                                <div className="space-y-3">
+                                    {history.filter(h => h.type === 'Tool').length > 0 ? (
+                                        history.filter(h => h.type === 'Tool').map(item => (
+                                            <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-start hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group/item">
+                                                <div className="flex gap-3">
+                                                    <div className="mt-1">
+                                                        <div className="w-2 h-2 rounded-full bg-blue-500 ring-4 ring-blue-50"></div>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-900 text-sm group-hover/item:text-blue-700 transition-colors">{item.name}</h4>
+                                                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                                                            <Calendar size={12} /> {item.date}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] uppercase font-bold text-slate-600 tracking-wide">
+                                                    {item.status}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="border border-dashed border-slate-200 rounded-xl p-6 text-center">
+                                            <p className="text-sm text-slate-400">No tool history available.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Allotment History Column */}
+                            <div>
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2 pl-1">
+                                    <Box size={14} /> Allotment History
+                                </h3>
+                                <div className="space-y-3">
+                                    {history.filter(h => h.type === 'Allotment').length > 0 ? (
+                                        history.filter(h => h.type === 'Allotment').map(item => (
+                                            <div key={item.id} className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-start hover:shadow-md hover:border-emerald-200 transition-all cursor-pointer group/item">
+                                                <div className="flex gap-3">
+                                                    <div className="mt-1">
+                                                        <div className="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-50"></div>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-900 text-sm group-hover/item:text-emerald-700 transition-colors">{item.name}</h4>
+                                                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
+                                                            <Calendar size={12} /> {item.date}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span className="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] uppercase font-bold text-slate-600 tracking-wide">
+                                                    {item.status}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="border border-dashed border-slate-200 rounded-xl p-6 text-center">
+                                            <p className="text-sm text-slate-400">No allotment history available.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

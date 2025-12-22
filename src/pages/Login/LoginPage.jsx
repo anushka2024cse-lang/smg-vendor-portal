@@ -2,24 +2,35 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, Key, ShieldCheck, Moon, Sun } from 'lucide-react';
 
+import { authService } from '../../services/authService';
+
 const LoginPage = () => {
     const [activeTab, setActiveTab] = useState('user'); // 'user' | 'admin'
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [adminKey, setAdminKey] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleUserLogin = (e) => {
+    const handleUserLogin = async (e) => {
         e.preventDefault();
         if (!email || !password) {
             setError('Please fill in all fields.');
             return;
         }
-        // Mock User Login
-        localStorage.setItem('role', 'User');
-        localStorage.setItem('token', 'mock-user-token');
-        navigate('/dashboard');
+
+        try {
+            setLoading(true);
+            setError('');
+            await authService.login(email, password);
+            navigate('/dashboard');
+        } catch (err) {
+            console.error(err);
+            setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleAdminLogin = (e) => {
@@ -42,8 +53,8 @@ const LoginPage = () => {
                     <button
                         onClick={() => { setActiveTab('user'); setError(''); }}
                         className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === 'user'
-                                ? 'bg-[#334155] text-white shadow-lg'
-                                : 'text-slate-400 hover:text-slate-200'
+                            ? 'bg-[#334155] text-white shadow-lg'
+                            : 'text-slate-400 hover:text-slate-200'
                             }`}
                     >
                         User Login
@@ -51,8 +62,8 @@ const LoginPage = () => {
                     <button
                         onClick={() => { setActiveTab('admin'); setError(''); }}
                         className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === 'admin'
-                                ? 'bg-[#334155] text-white shadow-lg'
-                                : 'text-slate-400 hover:text-slate-200'
+                            ? 'bg-[#334155] text-white shadow-lg'
+                            : 'text-slate-400 hover:text-slate-200'
                             }`}
                     >
                         Super Admin

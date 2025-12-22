@@ -102,51 +102,51 @@ const AdminUsers = () => {
     };
 
     return (
-        <div className="p-6 text-slate-300 w-full relative">
+        <div className="p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 relative">
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <p className="text-sm text-slate-400 font-medium">User Management</p>
-                    <h1 className="text-2xl font-bold text-white">All Users</h1>
+                    <p className="text-sm text-slate-500 font-medium">User Management</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">All Users</h1>
                 </div>
                 <button
                     onClick={() => setCreateModalOpen(true)}
-                    className="flex items-center gap-2 bg-slate-200 text-slate-900 px-4 py-2 rounded-lg font-bold hover:bg-white transition-colors text-sm"
+                    className="flex items-center gap-2 bg-blue-900 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-800 transition-all shadow-md hover:shadow-lg text-sm"
                 >
                     <Plus size={18} />
                     <span>Create User</span>
                 </button>
             </div>
 
-            <div className="bg-[#1f2533] rounded-xl border border-slate-700/50 overflow-hidden min-h-[400px]">
-                <div className="p-6 border-b border-slate-700/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
+                <div className="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-lg font-semibold text-white mb-1">All Users</h2>
-                        <p className="text-sm text-slate-400">A list of all users in the system. You must be a Super Admin to manage users.</p>
+                        <h2 className="text-lg font-bold text-slate-900 mb-1">All Users</h2>
+                        <p className="text-sm text-slate-500">A list of all users in the system. You must be a Super Admin to manage users.</p>
                     </div>
                 </div>
 
                 <div className="overflow-visible">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-slate-500 uppercase bg-[#1f2533] border-b border-slate-700/50">
+                        <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th className="px-6 py-4 font-medium tracking-wider">User</th>
-                                <th className="px-6 py-4 font-medium tracking-wider">Role</th>
-                                <th className="px-6 py-4 font-medium text-right tracking-wider">Actions</th>
+                                <th className="px-6 py-4 font-semibold tracking-wider">User</th>
+                                <th className="px-6 py-4 font-semibold tracking-wider">Role</th>
+                                <th className="px-6 py-4 font-semibold tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800">
+                        <tbody className="divide-y divide-slate-100">
                             {users.map((user, index) => (
-                                <tr key={user.id || index} className="hover:bg-[#1E293B]/30 transition-colors group relative">
+                                <tr key={user.id || index} className="hover:bg-slate-50 transition-colors group relative">
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col">
-                                            <span className="font-medium text-white text-base mb-0.5">{user.name}</span>
-                                            <span className="text-slate-400 text-xs">{user.email}</span>
+                                            <span className="font-medium text-slate-900 text-base mb-0.5">{user.name}</span>
+                                            <span className="text-slate-500 text-xs">{user.email}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${user.role === 'Super Admin'
-                                            ? 'bg-slate-200 text-slate-900 border-slate-200'
-                                            : 'bg-[#1E293B] text-slate-300 border-slate-700'
+                                            ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                            : 'bg-white text-slate-600 border-slate-200'
                                             }`}>
                                             {user.role}
                                         </span>
@@ -154,7 +154,7 @@ const AdminUsers = () => {
                                     <td className="px-6 py-4 text-right relative">
                                         <button
                                             onClick={(e) => toggleActions(user.id, e)}
-                                            className="text-slate-500 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors"
+                                            className="text-slate-400 hover:text-slate-600 p-2 rounded-lg hover:bg-slate-100 transition-colors"
                                         >
                                             <MoreHorizontal size={18} />
                                         </button>
@@ -162,26 +162,26 @@ const AdminUsers = () => {
                                         {activeActionId === user.id && (
                                             <div
                                                 ref={actionMenuRef}
-                                                className="absolute right-8 top-8 w-32 bg-[#1E293B] border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden"
+                                                className="absolute right-8 top-8 w-32 bg-white border border-slate-200 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 <button
                                                     onClick={() => handleEditClick(user)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-emerald-500 hover:bg-[#34d399]/10 transition-colors border-b border-slate-700/50"
+                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-100"
                                                 >
                                                     <Edit size={14} />
                                                     Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handlePrintClick(user)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-white/5 transition-colors border-b border-slate-700/50"
+                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors border-b border-slate-100"
                                                 >
                                                     <Printer size={14} />
                                                     Print
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(user)}
-                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors"
+                                                    className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
                                                 >
                                                     <Trash2 size={14} />
                                                     Delete
@@ -198,59 +198,59 @@ const AdminUsers = () => {
 
             {/* Create User Modal */}
             {createModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-[#1f2533] w-full max-w-2xl rounded-xl border border-slate-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-2xl rounded-xl border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         {/* Header */}
-                        <div className="flex items-center gap-3 p-6 border-b border-slate-800">
+                        <div className="flex items-center gap-3 p-6 border-b border-slate-100">
                             <button
                                 onClick={() => setCreateModalOpen(false)}
-                                className="p-2 bg-[#1E293B] rounded-lg hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+                                className="p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
                             >
                                 <ArrowLeft size={18} />
                             </button>
-                            <h2 className="text-xl font-bold text-white">Create New User</h2>
+                            <h2 className="text-xl font-bold text-slate-900">Create New User</h2>
                         </div>
 
                         {/* Body */}
                         <div className="p-8">
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
                                     <input
                                         type="text"
                                         value={newUser.name}
                                         onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 transition-all font-medium"
                                         placeholder="e.g. John Doe"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
                                     <input
                                         type="email"
                                         value={newUser.email}
                                         onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 transition-all font-medium"
                                         placeholder="e.g. john@example.com"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
                                     <input
                                         type="password"
                                         value={newUser.password}
                                         onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 transition-all font-medium"
                                         placeholder="Enter secure password"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Role</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Role</label>
                                     <div className="relative">
                                         <select
                                             value={newUser.role}
                                             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                                            className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 cursor-pointer"
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 cursor-pointer font-medium"
                                         >
                                             <option value="User">User</option>
                                             <option value="Admin">Admin</option>
@@ -266,13 +266,13 @@ const AdminUsers = () => {
                             <div className="mt-8 flex justify-end gap-3">
                                 <button
                                     onClick={() => setCreateModalOpen(false)}
-                                    className="px-6 py-2.5 rounded-lg font-medium text-slate-400 hover:text-white transition-colors"
+                                    className="px-6 py-2.5 rounded-lg font-medium text-slate-600 hover:bg-slate-50 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleCreateUser}
-                                    className="bg-slate-200 hover:bg-white text-slate-900 px-6 py-2.5 rounded-lg font-bold transition-colors"
+                                    className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg font-bold transition-colors shadow-md hover:shadow-lg"
                                 >
                                     Create User
                                 </button>
@@ -284,53 +284,53 @@ const AdminUsers = () => {
 
             {/* Edit User Modal */}
             {editModalUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-[#1f2533] w-full max-w-2xl rounded-xl border border-slate-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-2xl rounded-xl border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         {/* Header */}
-                        <div className="flex items-center gap-3 p-6 border-b border-slate-800">
+                        <div className="flex items-center gap-3 p-6 border-b border-slate-100">
                             <button
                                 onClick={() => setEditModalUser(null)}
-                                className="p-2 bg-[#1E293B] rounded-lg hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+                                className="p-2 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600"
                             >
                                 <ArrowLeft size={18} />
                             </button>
-                            <h2 className="text-xl font-bold text-white">Edit User: {editModalUser.name}</h2>
+                            <h2 className="text-xl font-bold text-slate-900">Edit User: {editModalUser.name}</h2>
                         </div>
 
                         {/* Body */}
                         <div className="p-8">
-                            <h3 className="text-lg font-semibold text-white mb-1">User Details</h3>
-                            <p className="text-sm text-slate-400 mb-8">Update the user's name and role. The email address cannot be changed.</p>
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">User Details</h3>
+                            <p className="text-sm text-slate-500 mb-8">Update the user's name and role. The email address cannot be changed.</p>
 
                             <div className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
                                     <input
                                         type="text"
                                         value={editModalUser.name}
                                         onChange={(e) => setEditModalUser({ ...editModalUser, name: e.target.value })}
-                                        className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                        className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 transition-all font-medium"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
                                     <input
                                         type="text"
                                         value={editModalUser.email}
                                         readOnly
                                         disabled
-                                        className="w-full bg-[#1E293B]/50 border border-slate-800 rounded-lg px-4 py-3 text-slate-500 cursor-not-allowed"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-500 cursor-not-allowed font-medium"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Role</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Role</label>
                                     <div className="relative">
                                         <select
                                             value={editModalUser.role}
                                             onChange={(e) => setEditModalUser({ ...editModalUser, role: e.target.value })}
-                                            className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white appearance-none focus:outline-none focus:border-blue-500 cursor-pointer"
+                                            className="w-full bg-white border border-slate-200 rounded-lg px-4 py-3 text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 cursor-pointer font-medium"
                                         >
                                             <option value="User">User</option>
                                             <option value="Admin">Admin</option>
@@ -343,10 +343,10 @@ const AdminUsers = () => {
                                 </div>
                             </div>
 
-                            <div className="mt-8">
+                            <div className="mt-8 flex justify-end">
                                 <button
                                     onClick={handleSaveEdit}
-                                    className="bg-slate-500 hover:bg-slate-400 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                                    className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg font-bold transition-colors shadow-md hover:shadow-lg"
                                 >
                                     Save Changes
                                 </button>

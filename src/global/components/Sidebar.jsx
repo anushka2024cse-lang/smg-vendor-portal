@@ -1,153 +1,179 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    Home,
     LayoutDashboard,
-    Box,
-    ClipboardList,
-    Layers,
     Users,
+    Package,
+    ShoppingCart,
+    FileText,
+    ClipboardList,
+    Wrench,
     Factory,
-    TrendingUp,
-    Download,
-    Truck,
-    Globe,
-    Shield,
-    HelpCircle,
+    BarChart2,
+    Settings,
+    MessageSquare,
     LogOut,
     Menu,
     X,
     ChevronDown,
-    ChevronRight,
-    MessageSquare,
-    Settings,
-    Wrench,
-    ArchiveRestore,
-    UserCog,
-    Package, // Added for new menuItems
-    BarChart2 // Added for new menuItems
+    Truck,
+    ShieldCheck,
+    Briefcase,
+    Bell,
+    UserCircle,
+    CreditCard,
+    Award,
+    AlertTriangle,
+    Layers
 } from 'lucide-react';
+import logo from '../../asset/logo/Logo.jpg';
 
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isOpen, setIsOpen] = useState(true);
-    const [adminOpen, setAdminOpen] = useState(false); // Default collapsed as requested
 
-    const menuItems = [
-        { icon: Home, label: 'Home', path: '/dashboard/home' },
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard/dashboard' },
-        { icon: Wrench, label: 'Models', path: '/models' },
-        { icon: Package, label: 'Inventory', path: '/inventory' },
-        { icon: ClipboardList, label: 'Component Details', path: '/component-details' },
-        { icon: ArchiveRestore, label: 'Vendor Details', path: '/vendor-details' },
-        { icon: Layers, label: 'Production', path: '/production' },
-        { icon: BarChart2, label: 'Forecasting', path: '/forecasting' },
-        { icon: Truck, label: 'Receive', path: '/receive' },
-        { icon: Truck, label: 'Dispatch', path: '/dispatch' }, // Use Truck generic for now
-        { icon: UserCog, label: 'Vendor Portal', path: '/vendor-portal' },
-    ];
+    // Role State (In a real app, this comes from AuthContext)
+    // Defaulting to 'vendorManager' as that is the primary focus of recent tasks
+    const [currentRole, setCurrentRole] = useState('vendorManager');
 
-    const adminItems = [
-        { icon: UserCog, label: 'All Users', path: '/admin/users' },
-        { icon: MessageSquare, label: 'Support Tickets', path: '/admin/tickets' },
-        { icon: Settings, label: 'Admin Settings', path: '/admin/settings' },
-    ];
+    const userProfile = {
+        name: currentRole === 'admin' ? 'Super Admin' : 'Rahul V.',
+        role: currentRole === 'admin' ? 'System Administrator' : 'Vendor Manager',
+        email: currentRole === 'admin' ? 'admin@smg.com' : 'rahul@smg.com'
+    };
+
+    // Collapsible State
+    const [expanded, setExpanded] = useState({
+        vendor: true,
+        procure: true,
+        requests: false,
+        ops: false,
+        admin: true
+    });
+
+    const toggleSection = (section) => {
+        setExpanded(prev => ({ ...prev, [section]: !prev[section] }));
+    };
+
+    const toggleRole = () => {
+        const newRole = currentRole === 'admin' ? 'vendorManager' : 'admin';
+        setCurrentRole(newRole);
+        // Redirect to appropriate dashboard if needed, or just stay on current path if shared
+        if (newRole === 'admin') navigate('/admin/users');
+        else navigate('/dashboard/home');
+    };
 
     const isActive = (path) => location.pathname === path;
+
+    const NavItem = ({ icon: Icon, label, path }) => (
+        <button
+            onClick={() => {
+                navigate(path);
+                if (window.innerWidth < 1024) setIsOpen(false);
+            }}
+            className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-sm transition-all duration-200 group ${isActive(path)
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                }`}
+        >
+            <div className="flex items-center gap-3">
+                <Icon size={18} strokeWidth={2} className={isActive(path) ? 'text-white' : 'group-hover:text-blue-200 transition-colors'} />
+                <span className="font-medium">{label}</span>
+            </div>
+        </button>
+    );
+
+    const CollapsibleSection = ({ icon: Icon, label, id, children }) => (
+        <div className="pt-2">
+            <button
+                onClick={() => toggleSection(id)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 ${expanded[id] ? 'text-white' : 'text-slate-300 hover:text-white'
+                    }`}
+            >
+                <div className="flex items-center gap-3">
+                    <Icon size={18} strokeWidth={2} className={expanded[id] ? 'text-blue-400' : ''} />
+                    <span className="font-semibold">{label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <ChevronDown size={14} className={`transform transition-transform duration-200 ${expanded[id] ? 'rotate-180' : ''}`} />
+                </div>
+            </button>
+
+            {expanded[id] && (
+                <div className="mt-1 space-y-0.5 pl-3 border-l-2 border-slate-800 ml-4 animate-in slide-in-from-top-1 duration-200">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <>
             {/* Mobile Toggle */}
             <button
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-sidebar text-sidebar-foreground rounded-md border border-sidebar-border"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#213763] text-white rounded-md shadow-lg"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 {isOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-sidebar text-sidebar-foreground transform transition-transform duration-200 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 flex flex-col border-r border-sidebar-border`}>
+            <div className={`fixed inset-y-0 left-0 z-40 w-72 bg-[#213763] text-slate-100 shadow-2xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 flex flex-col`}>
 
                 {/* Logo Area */}
-                <div className="h-16 flex items-center px-6 border-b border-sidebar-border bg-sidebar">
-                    <span className="text-xl font-bold text-sidebar-foreground tracking-wide">SMG-MMP</span>
+                <div className="h-24 w-full bg-[#213763] border-b border-white/10 relative">
+                    <img src={logo} alt="SMG Logo" className="w-full h-full object-cover" />
+                    <div className="absolute bottom-1 right-2 bg-black/50 text-xs px-2 py-0.5 rounded text-white/80">
+                        {currentRole === 'admin' ? 'ADMIN' : 'VENDOR MGR'}
+                    </div>
                 </div>
 
                 {/* Menu Items */}
-                <div className="flex-1 overflow-y-auto py-3 px-3 space-y-0.1 custom-scrollbar">
-                    {menuItems.map((item) => (
-                        <button
-                            key={item.label}
-                            onClick={() => {
-                                navigate(item.path);
-                                if (window.innerWidth < 1024) setIsOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${isActive(item.path)
-                                ? item.label === 'Models'
-                                    ? 'bg-blue-900/20 text-blue-400 border border-blue-900/30'
-                                    : 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
-                                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                                }`}
-                        >
-                            <item.icon size={18} strokeWidth={2} />
-                            <span className="font-medium">{item.label}</span>
-                        </button>
-                    ))}
+                <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
 
-                    {/* Collapsible Admin Section */}
-                    <div className="pt-2">
-                        <button
-                            onClick={() => setAdminOpen(!adminOpen)}
-                            className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all duration-200"
-                        >
-                            <div className="flex items-center gap-2">
-                                <UserCog size={18} strokeWidth={2} />
-                                <span className="font-medium">Admin</span>
-                            </div>
-                            <span className={`transform transition-transform duration-200 ${adminOpen ? 'rotate-180' : ''}`}>
-                                <ChevronDown size={14} />
-                            </span>
-                        </button>
+                    <NavItem icon={LayoutDashboard} label="Dashboard" path="/dashboard" />
 
-                        {adminOpen && (
-                            <div className="mt-1 space-y-0.1 animate-in slide-in-from-top-2 duration-200">
-                                {adminItems.map((item) => (
-                                    <button
-                                        key={item.label}
-                                        onClick={() => {
-                                            navigate(item.path);
-                                            if (window.innerWidth < 1024) setIsOpen(false);
-                                        }}
-                                        className={`w-full flex items-center gap-2 px-3 py-1.5 pl-9 rounded-lg text-sm transition-all duration-200 ${isActive(item.path)
-                                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                                            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                                            }`}
-                                    >
-                                        <item.icon size={16} />
-                                        <span>{item.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+                    {/* === ADMIN PORTAL MENU === */}
+                    {currentRole === 'admin' && (
+                        <>
+                            <div className="mt-6 mb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest">System Administration</div>
+                            <CollapsibleSection icon={Users} label="User Management" id="admin">
+                                <NavItem icon={Users} label="All Users" path="/admin/users" />
+                                <NavItem icon={ShieldCheck} label="Access Roles" path="/admin/users" />
+                            </CollapsibleSection>
 
-                    {/* Support */}
-                    <div
-                        onClick={() => navigate('/support')}
-                        className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer rounded-md transition-all duration-200 group ${location.pathname === '/support' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}
-                    >
-                        <HelpCircle size={18} className="text-sidebar-foreground group-hover:text-sidebar-accent-foreground opacity-70 group-hover:opacity-100" />
-                        <span className="text-sm">Support</span>
-                    </div>
+                            <CollapsibleSection icon={Settings} label="System Config" id="admin">
+                                <NavItem icon={Settings} label="General Settings" path="/admin/settings" />
+                                <NavItem icon={MessageSquare} label="Support Tickets" path="/admin/tickets" />
+                                <NavItem icon={BarChart2} label="Audit Logs" path="/admin/settings" />
+                            </CollapsibleSection>
+                        </>
+                    )}
+
+                    {/* === VENDOR MANAGER PORTAL MENU === */}
+                    {currentRole === 'vendorManager' && (
+                        <div className="space-y-1 mt-2">
+                            <NavItem icon={Users} label="Vendors" path="/vendor/list" />
+                            <NavItem icon={FileText} label="Purchase Orders" path="/po/list" />
+                            <NavItem icon={CreditCard} label="Payments" path="/payments" />
+                            <NavItem icon={Package} label="Components" path="/component-details" />
+                            <NavItem icon={ClipboardList} label="SOR" path="/sor/list" />
+                            <NavItem icon={ShieldCheck} label="Warranty Claims" path="/requests/warranty" />
+                            <NavItem icon={Award} label="Certificates" path="/certificates" />
+                            <NavItem icon={Wrench} label="Spare Requests" path="/requests/spares" />
+                            <NavItem icon={Truck} label="HSRP Requests" path="/requests/hsrp" />
+                            <NavItem icon={AlertTriangle} label="RSA Requests" path="/requests/rsa" />
+                            <NavItem icon={Factory} label="Production" path="/production" />
+                            <NavItem icon={Layers} label="Store & Bins" path="/inventory" />
+                            <div className="my-2 border-t border-white/10"></div>
+                            <NavItem icon={Settings} label="Settings" path="/settings" />
+                        </div>
+                    )}
+
                 </div>
 
-                {/* Footer / Logout */}
-                <div className="p-4 border-t border-sidebar-border bg-sidebar">
-                    <div className="flex items-center gap-3 px-4 py-2 text-sidebar-foreground/70 hover:text-sidebar-accent-foreground cursor-pointer transition-colors hover:bg-sidebar-accent rounded-md">
-                        <LogOut size={18} />
-                        <span className="text-sm font-medium">Logout</span>
-                    </div>
-                </div>
+                {/* Footer / User Profile Removed */}
+                {/* <div className="p-4 border-t border-white/10 bg-[#213763]">...</div> */}
             </div>
         </>
     );

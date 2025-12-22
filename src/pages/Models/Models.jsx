@@ -49,62 +49,61 @@ const Models = () => {
             <div className="flex items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">Product Models</h1>
-                    <p className="text-sm text-slate-500">Create and manage your vehicle and product models.</p>
+                    <p className="text-sm text-muted-foreground">Create and manage your vehicle and product models.</p>
                 </div>
             </div>
 
             {/* Create New Product Model Form */}
-            <div className="bg-card p-6 rounded-xl border border-border mb-6">
+            <div className="bg-card p-6 rounded-xl border border-border mb-6 shadow-sm">
                 <div className="flex items-center gap-2 mb-6">
-                    <PlusCircle className="text-white" size={20} />
-                    <h2 className="text-lg font-semibold text-card-foreground">Create New Product Model</h2>
+                    <h2 className="text-lg font-semibold text-primary">Create New Product Model</h2>
                 </div>
-                <p className="text-sm text-muted-foreground mb-6 -mt-4 ml-7">Enter the details for a new product model.</p>
+                <p className="text-sm text-muted-foreground mb-6 -mt-4">Enter the details for a new product model.</p>
 
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Input Fields */}
                     <div className="flex-1 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-2">Model Name</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">Model Name</label>
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleInputChange}
                                     placeholder="e.g., SMG Electric Scooter"
-                                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm"
+                                    className="w-full bg-white border border-input rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-2">Version</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">Version</label>
                                 <input
                                     type="text"
                                     name="version"
                                     value={formData.version}
                                     onChange={handleInputChange}
                                     placeholder="1.0"
-                                    className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm"
+                                    className="w-full bg-white border border-input rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-2">Image URL</label>
+                            <label className="block text-sm font-medium text-foreground mb-2">Image URL</label>
                             <input
                                 type="text"
                                 name="image"
                                 value={formData.image}
                                 onChange={handleInputChange}
                                 placeholder="https://example.com/image.png"
-                                className="w-full bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 text-sm"
+                                className="w-full bg-white border border-input rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
                             />
                         </div>
 
                         <div>
                             <button
                                 onClick={handleSave}
-                                className="bg-slate-300 text-[#0F172A] px-4 py-2 rounded-md text-sm font-semibold hover:bg-slate-400 transition-colors"
+                                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
                             >
                                 Save Model
                             </button>
@@ -113,8 +112,8 @@ const Models = () => {
 
                     {/* Image Preview */}
                     <div className="w-full lg:w-1/3">
-                        <label className="block text-xs font-medium text-slate-500 mb-2">Image Preview</label>
-                        <div className="bg-slate-800/50 rounded-xl h-48 flex flex-col items-center justify-center text-slate-500 overflow-hidden relative">
+                        <label className="block text-sm font-medium text-foreground mb-2">Image Preview</label>
+                        <div className="bg-muted/30 border border-border rounded-xl h-48 flex flex-col items-center justify-center text-muted-foreground overflow-hidden relative">
                             {formData.image ? (
                                 <img
                                     src={formData.image}
@@ -134,61 +133,62 @@ const Models = () => {
             </div>
 
             {/* Existing Models List */}
-            <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
                 <div className="p-6 border-b border-border">
-                    <h2 className="text-lg font-semibold text-card-foreground mb-1">Existing Models</h2>
+                    <h2 className="text-lg font-semibold text-primary mb-1">Existing Models</h2>
                     <p className="text-sm text-muted-foreground mb-4">A list of all saved product models.</p>
 
                     <div className="relative w-full md:w-96">
                         <input
                             type="text"
                             placeholder="Filter by model name..."
-                            className="w-full px-4 py-2 bg-[#1E293B] border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                            className="w-full px-4 py-2 bg-white border border-input rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10"
                         />
+                        <Search className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
                     </div>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-slate-600 uppercase bg-[#1E293B] border-b border-slate-700">
+                        <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                             <tr>
-                                <th className="px-6 py-3 font-medium opacity-50">Image</th>
-                                <th className="px-6 py-3 font-medium opacity-50">Model Name</th>
-                                <th className="px-6 py-3 font-medium opacity-50">Version</th>
-                                <th className="px-6 py-3 font-medium opacity-50">Created At</th>
-                                <th className="px-6 py-3 font-medium text-right opacity-50">Actions</th>
+                                <th className="px-6 py-3 font-semibold">Image</th>
+                                <th className="px-6 py-3 font-semibold">Model Name</th>
+                                <th className="px-6 py-3 font-semibold">Version</th>
+                                <th className="px-6 py-3 font-semibold">Created At</th>
+                                <th className="px-6 py-3 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800">
+                        <tbody className="divide-y divide-border">
                             {models.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                                         No product models found.
                                     </td>
                                 </tr>
                             ) : (
                                 models.map((model) => (
-                                    <tr key={model.id} className="hover:bg-[#1E293B]/50 transition-colors">
+                                    <tr key={model.id} className="hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="w-10 h-10 rounded bg-[#1E293B] overflow-hidden flex items-center justify-center border border-slate-700">
+                                            <div className="w-10 h-10 rounded bg-white overflow-hidden flex items-center justify-center border border-border shadow-sm">
                                                 {model.image ? (
                                                     <img src={model.image} alt={model.name} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <ImageIcon size={16} className="text-slate-600" />
+                                                    <ImageIcon size={16} className="text-muted-foreground" />
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 font-semibold text-white">{model.name}</td>
-                                        <td className="px-6 py-4 text-slate-400">{model.version}</td>
-                                        <td className="px-6 py-4 text-slate-400">{model.createdAt}</td>
+                                        <td className="px-6 py-4 font-medium text-foreground">{model.name}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{model.version}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{model.createdAt}</td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
-                                                <button className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors">
+                                                <button className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary transition-colors">
                                                     <Edit size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(model.id)}
-                                                    className="p-1 hover:bg-slate-700 rounded text-red-400 hover:text-red-300 transition-colors"
+                                                    className="p-1 hover:bg-red-50 rounded text-muted-foreground hover:text-red-500 transition-colors"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>

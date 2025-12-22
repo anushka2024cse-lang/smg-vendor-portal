@@ -1,0 +1,21 @@
+Sheets found: WARRANTY CLAIM FORM, COMPONENT TECHNICAL DETAILS
+
+--- Content of Sheet: WARRANTY CLAIM FORM ---
+Row 1: ["Warranty Claim Form",null,null,null,null,null]
+Row 5: ["Dealer Code",null,null,"Job Card No",null,null]
+Row 6: ["Dealer Name",null,null,"Customer Name",null,null]
+Row 7: ["VIN/FRAME no",null,null,"Customer Phone No",null,null]
+Row 8: ["Model",null,null,"Primary Sale Date",null,null]
+Row 9: ["Current KMS",null,null,"Secendory Sale Date",null,null]
+Row 10: ["Service Reg no",null,null,"Complaint Date",null,null]
+Row 11: ["Nature Of Complaint (Customer Voice)",null,null,null,null,null]
+Row 16: ["Observation (Cause of Failure/Defect)",null,null,null,null,null]
+Row 21: ["Failure Component Detail                                                                                                                                                       Component                                                                                                                                   Material code",null,null,null,null,null]
+Row 25: ["Reason For Replacement(Dealer's observation ,if any)",null,null,null,null,null]
+Row 29: ["S NO","Last 5 Service Details","Serviced date","Vehicle Age(month)","KMS","Remarks"]
+Row 30: [1,null,null,null,null,null]
+Row 31: [2,null,null,null,null,null]
+Row 32: [3,null,null,null,null,null]
+Row 33: [4,null,null,null,null,null]
+Row 34: [5,null,null,null,null,null]
+Row 35: ["Customer Signature And Contact No                                      Stamp and Dealer Signature",null,null,null,null,null]

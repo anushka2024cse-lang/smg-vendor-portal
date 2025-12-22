@@ -36,21 +36,21 @@ const Production = () => {
     };
 
     return (
-        <div className="p-6 text-muted-foreground w-full">
+        <div className="p-8 max-w-7xl mx-auto text-slate-500 w-full">
             {/* Header */}
             <div className="flex items-center gap-3 mb-8">
-                <AreaChart size={32} className="text-white" />
+                <AreaChart size={32} className="text-blue-600" />
                 <div>
-                    <p className="text-sm text-slate-400 font-medium">Material Management Portal</p>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">Production Assistant</h1>
+                    <p className="text-sm text-slate-500 font-medium">Material Management Portal</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Production Assistant</h1>
                 </div>
             </div>
 
             {/* Generate Production Data Section */}
-            <div className="bg-[#1f2533] p-6 rounded-xl border border-slate-800 mb-8">
+            <div className="bg-white p-6 rounded-xl border border-slate-200 mb-8 shadow-sm">
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-white mb-2">Generate Production Data</h2>
-                    <p className="text-sm text-slate-400">Enter a vehicle model (e.g., "Tesla Model Y" or "Honda Activa 6G") to generate its bill of materials, production process, and material specifications.</p>
+                    <h2 className="text-xl font-semibold text-slate-900 mb-2">Generate Production Data</h2>
+                    <p className="text-sm text-slate-500">Enter a vehicle model (e.g., "Tesla Model Y" or "Honda Activa 6G") to generate its bill of materials, production process, and material specifications.</p>
                 </div>
 
                 <div className="flex gap-4 max-w-3xl">
@@ -59,11 +59,11 @@ const Production = () => {
                         value={modelInput}
                         onChange={(e) => setModelInput(e.target.value)}
                         placeholder="Enter a vehicle model here..."
-                        className="flex-1 bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 text-sm transition-all"
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm transition-all"
                     />
                     <button
                         onClick={handleGenerate}
-                        className="flex items-center gap-2 bg-slate-200 text-slate-900 px-6 py-3 rounded-lg text-sm font-bold hover:bg-white transition-colors"
+                        className="flex items-center gap-2 bg-blue-900 text-white px-6 py-3 rounded-lg text-sm font-bold hover:bg-blue-800 transition-colors shadow-sm"
                     >
                         <Save size={18} />
                         <span>Generate & Save</span>
@@ -72,19 +72,19 @@ const Production = () => {
             </div>
 
             {/* Production History Section */}
-            <div className="bg-[#1f2533] rounded-xl border border-slate-800 overflow-hidden">
-                <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-slate-200 flex justify-between items-center">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <HistoryIcon className="text-slate-400" size={20} />
-                            <h2 className="text-lg font-semibold text-white">Production History</h2>
+                            <HistoryIcon className="text-slate-500" size={20} />
+                            <h2 className="text-lg font-semibold text-slate-900">Production History</h2>
                         </div>
-                        <p className="text-sm text-slate-400">Previously generated and saved production data.</p>
+                        <p className="text-sm text-slate-500">Previously generated and saved production data.</p>
                     </div>
 
                     <button
                         onClick={handleClearHistory}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white border border-slate-700 rounded-lg px-4 py-2 text-xs font-medium hover:bg-white/5 transition-colors"
+                        className="flex items-center gap-2 text-slate-500 hover:text-red-600 border border-slate-200 rounded-lg px-4 py-2 text-xs font-medium hover:bg-slate-50 transition-colors"
                     >
                         <Trash2 size={14} />
                         <span>Clear History</span>
@@ -93,14 +93,14 @@ const Production = () => {
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-800">
+                        <thead className="text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 bg-slate-50">
                             <tr>
-                                <th className="px-6 py-4 font-semibold tracking-wider opacity-90">Model</th>
-                                <th className="px-6 py-4 font-semibold tracking-wider opacity-90">Saved At</th>
-                                <th className="px-6 py-4 font-semibold text-right tracking-wider opacity-90">Actions</th>
+                                <th className="px-6 py-4 font-semibold tracking-wider">Model</th>
+                                <th className="px-6 py-4 font-semibold tracking-wider">Saved At</th>
+                                <th className="px-6 py-4 font-semibold text-right tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800">
+                        <tbody className="divide-y divide-slate-100">
                             {history.length === 0 ? (
                                 <tr>
                                     <td colSpan={3} className="px-6 py-10 text-center text-slate-500">
@@ -109,11 +109,11 @@ const Production = () => {
                                 </tr>
                             ) : (
                                 history.map((item) => (
-                                    <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                                        <td className="px-6 py-4 font-medium text-white group-hover:text-white transition-colors">{item.model}</td>
-                                        <td className="px-6 py-4 text-slate-400">{item.savedAt}</td>
+                                    <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
+                                        <td className="px-6 py-4 font-medium text-slate-900">{item.model}</td>
+                                        <td className="px-6 py-4 text-slate-500">{item.savedAt}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <button className="text-slate-500 hover:text-white p-2 rounded-lg hover:bg-slate-800 transition-colors">
+                                            <button className="text-slate-400 hover:text-blue-600 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                                                 <MoreHorizontal size={16} />
                                             </button>
                                         </td>

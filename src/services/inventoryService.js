@@ -1,12 +1,9 @@
 import apiClient from './apiClient';
 import { ENDPOINTS } from './endpoints';
-import { mockInventoryData } from '../mocks/inventoryData';
-
-import { USE_MOCK } from './config';
 
 export const inventoryService = {
     getAllInventory: async () => {
-        if (USE_MOCK) return Promise.resolve(mockInventoryData);
+        // ALWAYS Call API
         const response = await apiClient.get(ENDPOINTS.INVENTORY.LIST);
         return response.data;
     }
