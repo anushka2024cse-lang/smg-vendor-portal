@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../../services/apiClient';
 import {
     Search,
     Filter,
@@ -20,6 +21,7 @@ const VendorList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [vendors, setVendors] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // Modal State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -31,16 +33,30 @@ const VendorList = () => {
     }, []);
 
     const loadVendors = async () => {
-        const data = await vendorService.getAllVendors();
-        setVendors(data);
+        try {
+            setLoading(true);
+            const response = await apiClient.get('/vendors');
+            console.log('Vendors fetched:', response.data);
+            // Backend returns array directly, not wrapped in data
+            setVendors(Array.isArray(response.data) ? response.data : []);
+        } catch (error) {
+            console.error('Failed to load vendors:', error);
+            setVendors([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleVendorBlock = async (vendorId) => {
-        const vendor = vendors.find(v => v.id === vendorId);
-        if (vendor) {
-            const newStatus = vendor.status === 'Blocked' ? 'Active' : 'Blocked';
-            await vendorService.updateVendor({ ...vendor, status: newStatus });
-            loadVendors(); // Refresh list
+        try {
+            const vendor = vendors.find(v => v._id === vendorId || v.vendorId === vendorId);
+            if (vendor) {
+                const newStatus = vendor.status === 'Blocked' ? 'Active' : 'Blocked';
+                await apiClient.put(`/vendors/${vendorId}`, { status: newStatus });
+                loadVendors(); // Refresh list
+            }
+        } catch (error) {
+            console.error('Failed to update vendor:', error);
         }
     };
 
@@ -50,17 +66,23 @@ const VendorList = () => {
     };
 
     const handleSaveEdit = async () => {
-        if (editingVendor) {
-            await vendorService.updateVendor(editingVendor);
-            setIsEditModalOpen(false);
-            setEditingVendor(null);
-            loadVendors(); // Refresh to show changes
+        try {
+            if (editingVendor) {
+                await apiClient.put(`/vendors/${editingVendor._id || editingVendor.vendorId}`, editingVendor);
+                setIsEditModalOpen(false);
+                setEditingVendor(null);
+                loadVendors(); // Refresh to show changes
+            }
+        } catch (error) {
+            console.error('Failed to update vendor:', error);
+            alert('Failed to update vendor');
         }
     };
 
     const filteredVendors = vendors.filter(vendor => {
+        const vendorId = vendor._id || vendor.vendorId || '';
         const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            vendor.id.toLowerCase().includes(searchTerm.toLowerCase());
+            vendorId.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'All' || vendor.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -189,67 +211,71 @@ const VendorList = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {filteredVendors.map((vendor) => (
-                            <tr
-                                key={vendor.id}
-                                onClick={() => navigate(`/vendor/details/${vendor.id}`)}
-                                className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
-                            >
-                                <td className="px-6 py-4">
-                                    <span className="font-mono text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">{vendor.id}</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="font-medium text-slate-900">{vendor.name}</div>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-slate-600">{vendor.type}</td>
-                                <td className="px-6 py-4 text-sm text-slate-600">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
-                                            {vendor.contact.charAt(0)}
+                        {filteredVendors.map((vendor) => {
+                            const vendorId = vendor._id || vendor.vendorId || 'N/A';
+                            return (
+                                <tr
+                                    key={vendorId}
+                                    onClick={() => navigate(`/vendor/details/${vendorId}`)}
+                                    className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                                >
+                                    <td className="px-6 py-4">
+                                        <span className="font-mono text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">{vendor.vendorId || vendorId}</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="font-medium text-slate-900">{vendor.name}</div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-slate-600">{vendor.type}</td>
+                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                                                {vendor.contact?.charAt(0) || 'V'}
+                                            </div>
+                                            {vendor.contact || 'N/A'}
                                         </div>
-                                        {vendor.contact}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-slate-600">{vendor.city}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(vendor.status)}`}>
-                                        {vendor.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/vendor/details/${vendor.id}`);
-                                            }}
-                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="View Details"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEditClick(vendor);
-                                            }}
-                                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" title="Edit Vendor"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleVendorBlock(vendor.id);
-                                            }}
-                                            className={`p-1.5 rounded-md transition-colors ${vendor.status === 'Blocked' ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
-                                            title={vendor.status === 'Blocked' ? "Unblock Vendor" : "Block Vendor"}
-                                        >
-                                            <Ban size={18} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-slate-600">{vendor.city || 'N/A'}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(vendor.status)}`}>
+                                            {vendor.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/vendor/details/${vendorId}`);
+                                                }}
+                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="View Details"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditClick(vendor);
+                                                }}
+                                                className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors" title="Edit Vendor"
+                                            >
+                                                <Edit size={18} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleVendorBlock(vendorId);
+                                                }}
+                                                className={`p-1.5 rounded-md transition-colors ${vendor.status === 'Blocked' ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
+                                                title={vendor.status === 'Blocked' ? "Unblock Vendor" : "Block Vendor"}
+                                            >
+                                                <Ban size={18} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )
+                        }
+                        )}
                     </tbody>
                 </table>
 
