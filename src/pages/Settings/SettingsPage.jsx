@@ -48,12 +48,13 @@ const SettingsPage = () => {
         try {
             setLoading(true);
             await authService.updateProfile(profile);
-            alert("Profile updated successfully!");
-            // Optionally force header update via dispatch event if needed, but page refresh works
+            alert("✅ Profile updated successfully!");
+            // Reload to refresh header and sidebar
             window.location.reload();
         } catch (error) {
-            console.error(error);
-            alert("Failed to update profile.");
+            console.error('Profile update error:', error);
+            const errorMessage = error.message || error.response?.data?.message || "Failed to update profile";
+            alert(`❌ ${errorMessage}`);
         } finally {
             setLoading(false);
         }
