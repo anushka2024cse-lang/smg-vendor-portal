@@ -90,3 +90,61 @@ exports.getMe = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// @desc    Update user profile
+// @route   PUT /api/v1/auth/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+    try {
+        console.log('📝 Profile update request from user:', req.user?.id);
+        console.log('📝 Request body:', req.body);
+
+        if (!req.user || !req.user.id) {
+            console.log('❌ req.user is missing!');
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+
+        const { name, email, phone, department, designation } = req.body;
+
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            console.log('❌ User not found in database:', req.user.id);
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        console.log('✅ Found user:', user.email);
+
+        // Update fields
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
+        if (department) user.department = department;
+        if (designation) user.designation = designation;
+
+        await user.save();
+
+        console.log('✅ Profile updated successfully!');
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully',
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                department: user.department,
+                designation: user.designation,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        console.error('❌ Profile update ERROR:', error.message);
+        console.error('Stack trace:', error.stack);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
