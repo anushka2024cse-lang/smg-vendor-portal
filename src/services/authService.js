@@ -5,27 +5,46 @@ export const authService = {
     login: async (email, password) => {
         try {
             const response = await apiClient.post(ENDPOINTS.AUTH.LOGIN, { email, password });
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('user', JSON.stringify(response.data.user || {}));
-                localStorage.setItem('role', response.data.user?.role || 'User'); // Fallback
+            console.log('📥 Login response:', response.data);
+
+            // Backend returns flat structure: { _id, name, email, role, token }
+            const { token, _id, name, email: userEmail, role } = response.data;
+
+            if (token) {
+                // Store token
+                localStorage.setItem('token', token);
+                localStorage.setItem('authToken', token);
+
+                // Build user object from flat response
+                const userData = {
+                    _id,
+                    name,
+                    email: userEmail,
+                    role
+                };
+
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('role', role);
+                console.log('✅ User data stored:', userData);
             }
+
             return response.data;
         } catch (error) {
+            console.error('❌ Login error:', error.response?.data || error.message);
             throw error;
         }
     },
 
     register: async (userData) => {
-        const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, userData); // Needs endpoint update if not present
+        const response = await apiClient.post(ENDPOINTS.AUTH.REGISTER, userData);
         return response.data;
     },
 
     logout: () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         localStorage.removeItem('role');
-        // window.location.href = '/login'; // Handled by component usually
     },
 
     getCurrentUser: () => {
@@ -35,12 +54,11 @@ export const authService = {
             return JSON.parse(userStr);
         } catch (e) {
             console.error("Error parsing user data", e);
-            return null; // Fallback to avoid crash
+            return null;
         }
     },
 
     updateProfile: async (userData) => {
-        // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 500));
 
         try {
@@ -54,6 +72,6 @@ export const authService = {
     },
 
     getToken: () => {
-        return localStorage.getItem('token');
+        return localStorage.getItem('token') || localStorage.getItem('authToken');
     }
 };

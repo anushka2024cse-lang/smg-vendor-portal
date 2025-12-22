@@ -10,26 +10,38 @@ const seedUser = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log('MongoDB Connected');
 
-        // Check if user exists
-        const userExists = await User.findOne({ email: 'admin@smg.com' });
-
-        if (userExists) {
-            console.log('Admin user already exists');
-            process.exit();
+        // Create Admin User
+        const adminExists = await User.findOne({ email: 'admin@smg.com' });
+        if (!adminExists) {
+            const adminUser = await User.create({
+                name: 'Admin User',
+                email: 'admin@smg.com',
+                password: 'password123',
+                role: 'admin'
+            });
+            console.log(`✅ Admin User Created: ${adminUser.email} / password123`);
+        } else {
+            console.log('ℹ️  Admin user already exists');
         }
 
-        // Create Admin User
-        const user = await User.create({
-            name: 'Admin User',
-            email: 'admin@smg.com',
-            password: 'password123',
-            role: 'Admin'
-        });
+        // Create Vendor Manager User
+        const managerExists = await User.findOne({ email: 'manager@smg.com' });
+        if (!managerExists) {
+            const managerUser = await User.create({
+                name: 'Vendor Manager',
+                email: 'manager@smg.com',
+                password: 'password123',
+                role: 'vendorManager'
+            });
+            console.log(`✅ Vendor Manager Created: ${managerUser.email} / password123`);
+        } else {
+            console.log('ℹ️  Vendor Manager already exists');
+        }
 
-        console.log(`Admin User Created: ${user.email} / password123`);
+        console.log('\n🎉 User seeding completed!');
         process.exit();
     } catch (error) {
-        console.error(`Error: ${error.message}`);
+        console.error(`❌ Error: ${error.message}`);
         process.exit(1);
     }
 };

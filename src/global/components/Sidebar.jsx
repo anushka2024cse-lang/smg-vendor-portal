@@ -121,11 +121,11 @@ const Sidebar = () => {
             <div className={`fixed inset-y-0 left-0 z-40 w-72 bg-[#213763] text-slate-100 shadow-2xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 flex flex-col`}>
 
                 {/* Logo Area */}
-                <div className="h-24 w-full bg-[#213763] border-b border-white/10 relative">
-                    <img src={logo} alt="SMG Logo" className="w-full h-full object-cover" />
-                    <div className="absolute bottom-1 right-2 bg-black/50 text-xs px-2 py-0.5 rounded text-white/80">
+                <div className="h-16 w-full bg-[#ffffff] border-b border-white/10 relative">
+                    <img src={logo} alt="SMG Logo" className="w-full h-full object-contain" />
+                    {/* <div className="absolute bottom-1 right-2 bg-black/50 text-xs px-2 py-0.5 rounded text-white/80">
                         {currentRole === 'admin' ? 'ADMIN' : 'VENDOR MGR'}
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Menu Items */}
@@ -158,7 +158,7 @@ const Sidebar = () => {
                             <NavItem icon={CreditCard} label="Payments" path="/payments" />
                             <NavItem icon={Package} label="Components" path="/component-details" />
                             <NavItem icon={ClipboardList} label="SOR" path="/sor/list" />
-                            <NavItem icon={ShieldCheck} label="Warranty Claims" path="/requests/warranty" />
+                            <NavItem icon={ShieldCheck} label="Warranty Claims" path="/warranty-claims" />
                             <NavItem icon={Award} label="Certificates" path="/certificates" />
                             <NavItem icon={Wrench} label="Spare Requests" path="/requests/spares" />
                             <NavItem icon={Truck} label="HSRP Requests" path="/requests/hsrp" />

@@ -26,64 +26,78 @@ import SORList from './pages/Procurement/SOR/SORList';
 import PurchaseOrderCreateReplica from './pages/Procurement/PurchaseOrderCreateReplica';
 import SettingsPage from './pages/Settings/SettingsPage';
 import PaymentList from './pages/Payments/PaymentList';
+import AdminNotifications from './pages/Admin/AdminNotifications';
+import WarrantyClaimsList from './pages/WarrantyClaims/WarrantyClaimsList';
+import WarrantyClaimForm from './pages/WarrantyClaims/WarrantyClaimForm';
+import WarrantyClaimDetails from './pages/WarrantyClaims/WarrantyClaimDetails';
 
 import ProtectedRoute from './global/components/ProtectedRoute';
+import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={<Login />} />
+        <ToastProvider>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
 
-                {/* Secure Routes */}
-                <Route element={<ProtectedRoute />}>
-                    {/* Dashboard Layout Routes */}
-                    <Route element={<DashboardLayout />}>
-                        <Route path="/dashboard/home" element={<HomePage />} />
-                        <Route path="/dashboard" element={<DashboardHome />} />
-                        <Route path="/dashboard/dashboard" element={<DashboardHome />} />
+                    {/* Secure Routes */}
+                    <Route element={<ProtectedRoute />}>
+                        {/* Dashboard Layout Routes */}
+                        <Route element={<DashboardLayout />}>
+                            <Route path="/dashboard/home" element={<HomePage />} />
+                            <Route path="/dashboard" element={<DashboardHome />} />
+                            <Route path="/dashboard/dashboard" element={<DashboardHome />} />
 
-                        {/* Core Modules */}
-                        <Route path="/models" element={<Models />} />
-                        <Route path="/inventory" element={<Inventory />} />
-                        <Route path="/component-details" element={<ComponentDetails />} />
+                            {/* Core Modules */}
+                            <Route path="/models" element={<Models />} />
+                            <Route path="/inventory" element={<Inventory />} />
+                            <Route path="/component-details" element={<ComponentDetails />} />
 
-                        {/* VENDOR MODULE */}
-                        <Route path="/vendor/list" element={<VendorList />} />
-                        <Route path="/vendor/onboarding" element={<VendorOnboarding />} />
-                        <Route path="/vendor/details/:vendorId" element={<VendorDetails />} />
+                            {/* VENDOR MODULE */}
+                            <Route path="/vendor/list" element={<VendorList />} />
+                            <Route path="/vendor/onboarding" element={<VendorOnboarding />} />
+                            <Route path="/vendor/details/:vendorId" element={<VendorDetails />} />
 
-                        {/* PROCUREMENT */}
-                        <Route path="/po/list" element={<PurchaseOrderList />} />
-                        <Route path="/po/create" element={<PurchaseOrderCreate />} />
-                        <Route path="/po/create-replica" element={<PurchaseOrderCreateReplica />} />
-                        <Route path="/sor/list" element={<SORList />} />
-                        <Route path="/sor/create" element={<CreateSor />} />
-                        <Route path="/sor/workspace" element={<Navigate to="/sor/list" replace />} />
-                        <Route path="/sor/workspace/:id" element={<SORWorkspace />} />
-                        <Route path="/payments" element={<PaymentList />} />
+                            {/* PROCUREMENT */}
+                            <Route path="/po/list" element={<PurchaseOrderList />} />
+                            <Route path="/po/create" element={<PurchaseOrderCreate />} />
+                            <Route path="/po/create-replica" element={<PurchaseOrderCreateReplica />} />
+                            <Route path="/sor/list" element={<SORList />} />
+                            <Route path="/sor/create" element={<CreateSor />} />
+                            <Route path="/sor/workspace" element={<Navigate to="/sor/list" replace />} />
+                            <Route path="/sor/workspace/:id" element={<SORWorkspace />} />
+                            <Route path="/payments" element={<PaymentList />} />
 
-                        {/* Operations */}
-                        <Route path="/production" element={<Production />} />
-                        <Route path="/forecasting" element={<Forecasting />} />
-                        <Route path="/receive" element={<MaterialReceive />} />
-                        <Route path="/dispatch" element={<MaterialDispatch />} />
+                            {/* Operations */}
+                            <Route path="/production" element={<Production />} />
+                            <Route path="/forecasting" element={<Forecasting />} />
+                            <Route path="/receive" element={<MaterialReceive />} />
+                            <Route path="/dispatch" element={<MaterialDispatch />} />
 
-                        {/* Admin & Support */}
-                        <Route path="/admin" element={<Admin />} />
-                        <Route path="/admin/settings" element={<Admin />} />
-                        <Route path="/admin/users" element={<AdminUsers />} />
-                        <Route path="/admin/tickets" element={<AdminTickets />} />
-                        <Route path="/support" element={<Support />} />
-                        <Route path="/settings" element={<SettingsPage />} />
+                            {/* Admin & Support */}
+                            <Route path="/admin" element={<Admin />} />
+                            <Route path="/admin/settings" element={<Admin />} />
+                            <Route path="/admin/users" element={<AdminUsers />} />
+                            <Route path="/admin/tickets" element={<AdminTickets />} />
+                            <Route path="/admin/notifications" element={<AdminNotifications />} />
 
-                        {/* Default redirect to home */}
-                        <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
+                            {/* Warranty Claims */}
+                            <Route path="/warranty-claims" element={<WarrantyClaimsList />} />
+                            <Route path="/warranty-claims/create" element={<WarrantyClaimForm />} />
+                            <Route path="/warranty-claims/:id" element={<WarrantyClaimDetails />} />
+
+                            <Route path="/support" element={<Support />} />
+                            <Route path="/settings" element={<SettingsPage />} />
+
+                            {/* Default redirect to home */}
+                            <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
+                        </Route>
                     </Route>
-                </Route>
-            </Routes>
-        </BrowserRouter>
-    )
+                </Routes>
+            </BrowserRouter>
+        </ToastProvider>
+    );
 }
 
 export default App;

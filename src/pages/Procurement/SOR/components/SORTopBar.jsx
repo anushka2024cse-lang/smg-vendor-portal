@@ -7,22 +7,24 @@ const SORTopBar = ({ record, isEditMode, toggleEditMode, toggleAuditPanel }) => 
 
     return (
         <div className="bg-white border-b border-slate-200 px-6 py-5 mb-6">
+            {/* Back Button - Top Right */}
+            <div className="flex justify-end mb-4 max-w-7xl mx-auto">
+                <button
+                    onClick={() => navigate('/sor/list')}
+                    className="flex items-center gap-2 px-4 py-2.5 text-slate-600 hover:text-slate-900 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-300 transition-all group font-medium"
+                >
+                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                    <span>Back</span>
+                </button>
+            </div>
+
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 max-w-7xl mx-auto">
 
                 {/* Left: Title & Info */}
                 <div>
-                    {/* Back Button */}
-                    <button
-                        onClick={() => navigate('/sor/list')}
-                        className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-3 transition-colors text-sm font-medium"
-                    >
-                        <ArrowLeft size={16} />
-                        Back to SOR List
-                    </button>
-
                     <div className="flex items-center gap-3 mb-1">
                         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                            {record.title || "New SOR"}
+                            Statement of Requirements
                         </h1>
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
                             {record.status}

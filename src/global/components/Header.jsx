@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Mail, User as UserIcon, LogOut, Settings, ChevronDown, Search, ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../../services/authService';
+import NotificationCenter from './NotificationCenter';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -103,8 +104,8 @@ const Header = () => {
                     </div>
                 </div>
 
-                {/* Right: Actions & Profile */}
-                <div className="flex items-center gap-6">
+                {/* Right: Clock + Profile */}
+                <div className="flex items-center gap-2">
 
                     {/* Time Display (Moved to Top Bar) */}
                     <div className="text-right hidden md:block">
@@ -114,15 +115,12 @@ const Header = () => {
 
                     <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
 
-                    <div className="flex items-center gap-4">
-                        <button className="relative p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
-                            <Bell size={20} />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
-                        <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
-                            <Mail size={20} />
-                        </button>
-                    </div>
+                    {/* Notification Center (replaces old bell icon) */}
+                    <NotificationCenter />
+
+                    <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
+                        <Mail size={20} />
+                    </button>
 
                     <div className="h-8 w-px bg-slate-200"></div>
 

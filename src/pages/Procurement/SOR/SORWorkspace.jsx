@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import SORTopBar from './components/SORTopBar';
-import SORStats from './components/SORStats';
 import SORAuditPanel from './components/SORAuditPanel';
 import SORFooter from './components/SORFooter';
 import SORTabs from './components/SORTabs';
@@ -50,15 +49,7 @@ const SORWorkspace = () => {
                     <main className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-50/50">
                         <div className="max-w-7xl mx-auto space-y-6">
 
-                            {/* Header Stats */}
-                            <SORStats stats={{
-                                ...record,
-                                lastAudit: "24h ago",
-                                dataIntegrity: 98.4
-                            }} />
-
-                            {/* Main Content: Tabs (Specification, Docs, History) */}
-                            {/* The 'Overview' tab inside here contains the SORForm */}
+                            {/* Main Content: Form */}
                             <SORTabs id={id} record={record} isEditMode={isEditMode} />
 
                         </div>
