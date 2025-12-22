@@ -19,7 +19,8 @@ const io = new Server(server, {
     cors: {
         origin: [
             process.env.FRONTEND_URL || 'http://localhost:5174',
-            'https://demo1smg.netlify.app'
+            'https://demo1smg.netlify.app',
+            'https://demo-smg-vendor.netlify.app'
         ],
         methods: ['GET', 'POST'],
         credentials: true
@@ -43,7 +44,8 @@ app.use(express.json());
 app.use(cors({
     origin: [
         'http://localhost:5174',
-        'https://demo1smg.netlify.app'
+        'https://demo1smg.netlify.app',
+        'https://demo-smg-vendor.netlify.app'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
