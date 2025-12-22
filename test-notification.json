@@ -1,7 +1,0 @@
-{
-    "recipient": "temp-user-id",
-    "type": "success",
-    "title": "🎉 System Test - Notification Working!",
-    "message": "Congratulations! Your notification system is working perfectly. This is a test notification to verify the bell icon and notification center.",
-    "link": "/dashboard"
-}
