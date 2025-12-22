@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { paymentService } from '../../services/paymentService';
+import socketService from '../../services/socketService';
+import CreatePaymentModal from './CreatePaymentModal';
 import {
     CreditCard,
     Clock,
@@ -11,79 +14,138 @@ import {
     Eye,
     Edit,
     ChevronDown,
-    Download
+    Download,
+    Plus,
+    Send
 } from 'lucide-react';
 
 const PaymentList = () => {
-    // Mock Data
-    const [payments, setPayments] = useState([
-        {
-            id: 'PAY-2025-001',
-            invoiceNo: 'INV-EP-2025-0156',
-            poNo: 'PO-202512-001',
-            vendor: 'ElectroParts India Pvt Ltd',
-            date: '16 Dec 2025',
-            paymentDate: '17 Dec 2025',
-            invoiceAmount: 501500,
-            paymentAmount: 501500,
-            status: 'Paid',
-            mode: 'RTGS',
-            ref: 'RTGS202512170001',
-            remarks: '50% advance payment against PO'
-        },
-        {
-            id: 'PAY-2025-002',
-            invoiceNo: 'INV-BT-2025-0089',
-            poNo: 'PO-202512-002',
-            vendor: 'BatteryTech Solutions',
-            date: '18 Dec 2025',
-            paymentDate: '-',
-            invoiceAmount: 991200,
-            paymentAmount: 0,
-            status: 'Pending',
-            mode: '-',
-            ref: '-',
-            remarks: 'Awaiting QA approval'
-        },
-        {
-            id: 'PAY-2025-003',
-            invoiceNo: 'INV-EP-2025-0148',
-            poNo: 'PO-202512-003',
-            vendor: 'ElectroParts India Pvt Ltd',
-            date: '08 Dec 2025',
-            paymentDate: '10 Dec 2025',
-            invoiceAmount: 330400,
-            paymentAmount: 330400,
-            status: 'Paid',
-            mode: 'NEFT',
-            ref: 'NEFT202512100045',
-            remarks: 'Full settlement'
-        },
-    ]);
-
+    // State
+    const [payments, setPayments] = useState([]);
+    const [vendors, setVendors] = useState([]);
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [viewModalOpen, setViewModalOpen] = useState(false);
     const [statusModalOpen, setStatusModalOpen] = useState(false);
+    const [createModalOpen, setCreateModalOpen] = useState(false);
     const [newStatus, setNewStatus] = useState('');
 
-    // Stats Calculation
-    const totalPayments = payments.length;
-    const pendingCount = payments.filter(p => p.status === 'Pending').length;
-    const pendingAmount = payments.filter(p => p.status === 'Pending').reduce((acc, curr) => acc + curr.invoiceAmount, 0);
-    const paidCount = payments.filter(p => p.status === 'Paid').length;
-    const paidAmount = payments.filter(p => p.status === 'Paid').reduce((acc, curr) => acc + curr.paymentAmount, 0);
-    const onHoldCount = payments.filter(p => p.status === 'On Hold').length;
+    // Fetch payments and stats on component mount
+    useEffect(() => {
+        fetchPayments();
+        fetchStats();
 
-    // Filter Logic
+        // Listen for real-time payment updates (only if socketService is available)
+        if (socketService && typeof socketService.on === 'function') {
+            socketService.on('paymentUpdated', handlePaymentUpdate);
+
+            return () => {
+                if (socketService && typeof socketService.off === 'function') {
+                    socketService.off('paymentUpdated', handlePaymentUpdate);
+                }
+            };
+        }
+    }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const handlePaymentUpdate = (updatedPayment) => {
+        try {
+            setPayments(prevPayments =>
+                prevPayments.map(payment =>
+                    payment._id === updatedPayment._id ? updatedPayment : payment
+                )
+            );
+            // Refresh stats
+            fetchStats();
+        } catch (error) {
+            console.error('Error handling payment update:', error);
+        }
+    };
+
+    const fetchPayments = async () => {
+        try {
+            setLoading(true);
+            const filters = {};
+            if (statusFilter !== 'All Status') {
+                filters.status = statusFilter;
+            }
+            const data = await paymentService.getPayments(filters);
+            setPayments(data.payments || []);
+        } catch (error) {
+            console.error('Failed to fetch payments:', error);
+            setPayments([]); // Set empty array on error
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchStats = async () => {
+        try {
+            const data = await paymentService.getPaymentStats();
+            setStats(data);
+        } catch (error) {
+            console.error('Failed to fetch stats:', error);
+            setStats(null); // Set null on error
+        }
+    };
+
+    const fetchVendors = async () => {
+        try {
+            // Import vendor service
+            const { default: apiClient } = await import('../../services/apiClient');
+            const response = await apiClient.get('/vendors');
+            console.log('Fetched vendors for payment modal:', response.data);
+            // Backend returns array directly, not wrapped
+            if (Array.isArray(response.data)) {
+                setVendors(response.data);
+            } else {
+                setVendors([]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch vendors:', error);
+            // Set empty array so modal can still open
+            setVendors([]);
+        }
+    };
+
+    // Fetch vendors on mount
+    useEffect(() => {
+        try {
+            fetchVendors();
+        } catch (error) {
+            console.error('Error in vendor fetch:', error);
+        }
+    }, []);
+
+    const handleSendRequest = async (paymentId) => {
+        if (confirm('Send payment request notification to vendor?')) {
+            try {
+                await paymentService.sendPaymentRequest(paymentId);
+                alert('Payment request sent successfully!');
+            } catch (error) {
+                alert(`Failed to send request: ${error.message}`);
+            }
+        }
+    };
+
+    // Filter Logic (client-side for search term)
     const filteredPayments = payments.filter(p => {
-        const matchesSearch = p.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.poNo.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'All Status' || p.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesSearch =
+            p.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.vendor?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.paymentNumber.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
     });
+
+    // Stats Calculation from backend stats
+    const totalPayments = payments.length;
+    const pendingCount = stats?.statusStats?.find(s => s._id === 'Pending')?.count || 0;
+    const pendingAmount = stats?.statusStats?.find(s => s._id === 'Pending')?.totalAmount || 0;
+    const paidCount = stats?.statusStats?.find(s => s._id === 'Paid')?.count || 0;
+    const paidAmount = stats?.statusStats?.find(s => s._id === 'Paid')?.netPayable || 0;
+    const onHoldCount = stats?.statusStats?.find(s => s._id === 'On Hold')?.count || 0;
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -96,11 +158,18 @@ const PaymentList = () => {
         }
     };
 
-    const handleUpdateStatus = () => {
+    const handleUpdateStatus = async () => {
         if (selectedPayment && newStatus) {
-            setPayments(prev => prev.map(p => p.id === selectedPayment.id ? { ...p, status: newStatus } : p));
-            setStatusModalOpen(false);
-            setSelectedPayment(null);
+            try {
+                await paymentService.updatePaymentStatus(selectedPayment._id, newStatus);
+                setStatusModalOpen(false);
+                setSelectedPayment(null);
+                // Refresh payments list
+                fetchPayments();
+                fetchStats();
+            } catch (error) {
+                alert(`Failed to update status: ${error.message}`);
+            }
         }
     };
 
@@ -142,8 +211,8 @@ const PaymentList = () => {
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.setFont('helvetica', 'bold');
-            doc.text(payment.id, 25, 77);
-            doc.text(payment.date, 120, 77);
+            doc.text(payment.paymentNumber, 25, 77);
+            doc.text(new Date(payment.invoiceDate).toLocaleDateString('en-IN'), 120, 77);
 
             // Row 2: Vendor
             doc.setFontSize(10);
@@ -154,7 +223,7 @@ const PaymentList = () => {
             doc.setFontSize(14);
             doc.setTextColor(33, 55, 99);
             doc.setFont('helvetica', 'bold');
-            doc.text(payment.vendor, 25, 103);
+            doc.text(payment.vendor?.name || 'N/A', 25, 103);
 
             // Divider
             doc.setDrawColor(230, 230, 230);
@@ -170,8 +239,8 @@ const PaymentList = () => {
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
             doc.setFont('helvetica', 'bold');
-            doc.text(payment.invoiceNo, 25, 132);
-            doc.text(payment.poNo, 120, 132);
+            doc.text(payment.invoiceNumber, 25, 132);
+            doc.text(payment.purchaseOrder?.poNumber || 'N/A', 120, 132);
 
             // Row 4: Amount & Status
             doc.setFontSize(10);
@@ -183,7 +252,7 @@ const PaymentList = () => {
             doc.setFontSize(16);
             doc.setTextColor(22, 163, 74); // Green
             doc.setFont('helvetica', 'bold');
-            doc.text(`INR ${payment.paymentAmount.toLocaleString()}`, 25, 155);
+            doc.text(`INR ${payment.netPayableAmount?.toLocaleString() || payment.paymentAmount.toLocaleString()}`, 25, 155);
 
             doc.setFontSize(12);
             doc.setTextColor(0, 0, 0);
@@ -193,14 +262,14 @@ const PaymentList = () => {
             doc.setFontSize(9);
             doc.setTextColor(120, 120, 120);
             doc.setFont('helvetica', 'italic');
-            doc.text(`Transaction Reference: ${payment.ref}`, 105, 180, { align: "center" });
-            doc.text(`Payment Mode: ${payment.mode}`, 105, 185, { align: "center" });
+            doc.text(`Transaction Reference: ${payment.transactionReference || 'Pending'}`, 105, 180, { align: "center" });
+            doc.text(`Payment Mode: ${payment.paymentMode || 'N/A'}`, 105, 185, { align: "center" });
 
             doc.setFont('helvetica', 'normal');
             doc.text("This is a computer-generated receipt.", 105, 280, { align: "center" });
 
             // Save
-            doc.save(`Receipt-${payment.invoiceNo}.pdf`);
+            doc.save(`Receipt-${payment.invoiceNumber}.pdf`);
         });
     };
 
@@ -208,9 +277,18 @@ const PaymentList = () => {
         <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
 
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Payments</h1>
-                <p className="text-slate-500 mt-1">Track and manage vendor payments</p>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Payments</h1>
+                    <p className="text-slate-500 mt-1">Track and manage vendor payments</p>
+                </div>
+                <button
+                    onClick={() => setCreateModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 hover:shadow-lg transition-all"
+                >
+                    <Plus size={20} />
+                    Create Payment
+                </button>
             </div>
 
             {/* KPI Cards */}
@@ -307,18 +385,24 @@ const PaymentList = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredPayments.length > 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="7" className="p-8 text-center text-slate-500">
+                                        Loading payments...
+                                    </td>
+                                </tr>
+                            ) : filteredPayments.length > 0 ? (
                                 filteredPayments.map((payment) => (
-                                    <tr key={payment.id} className="hover:bg-slate-50 transition-colors group">
+                                    <tr key={payment._id} className="hover:bg-slate-50 transition-colors group">
                                         <td className="p-4">
-                                            <div className="font-bold text-slate-800 text-sm">{payment.invoiceNo}</div>
-                                            <div className="text-xs text-slate-500 mt-0.5">PO: {payment.poNo}</div>
+                                            <div className="font-bold text-slate-800 text-sm">{payment.invoiceNumber}</div>
+                                            <div className="text-xs text-slate-500 mt-0.5">PO: {payment.purchaseOrder?.poNumber || 'N/A'}</div>
                                         </td>
                                         <td className="p-4 text-sm text-slate-600 font-medium">
-                                            {payment.vendor}
+                                            {payment.vendor?.name || 'N/A'}
                                         </td>
                                         <td className="p-4 text-sm text-slate-500">
-                                            {payment.date}
+                                            {new Date(payment.invoiceDate).toLocaleDateString('en-IN')}
                                         </td>
                                         <td className="p-4 text-sm font-bold text-slate-800">
                                             ₹{payment.invoiceAmount.toLocaleString()}
@@ -345,6 +429,14 @@ const PaymentList = () => {
                                                 >
                                                     <Edit size={16} />
                                                 </button>
+                                                {payment.status !== 'Paid' && (
+                                                    <button
+                                                        onClick={() => handleSendRequest(payment._id)}
+                                                        className="p-1.5 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors" title="Send Payment Request"
+                                                    >
+                                                        <Send size={16} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleDownloadReceipt(payment)}
                                                     className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Download Receipt"
@@ -381,18 +473,18 @@ const PaymentList = () => {
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Invoice Number</p>
-                                    <p className="font-bold text-slate-800">{selectedPayment.invoiceNo}</p>
+                                    <p className="font-bold text-slate-800">{selectedPayment.invoiceNumber}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-slate-500 font-medium mb-1">PO Number</p>
-                                    <p className="font-bold text-slate-800">{selectedPayment.poNo}</p>
+                                    <p className="text-xs text-slate-500 font-medium mb-1">Payment Number</p>
+                                    <p className="font-bold text-slate-800">{selectedPayment.paymentNumber}</p>
                                 </div>
                             </div>
 
                             <div className="flex justify-between items-start">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Vendor</p>
-                                    <p className="font-bold text-slate-800 text-lg">{selectedPayment.vendor}</p>
+                                    <p className="font-bold text-slate-800 text-lg">{selectedPayment.vendor?.name || 'N/A'}</p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs text-slate-500 font-medium mb-1">Status</p>
@@ -405,11 +497,11 @@ const PaymentList = () => {
                             <div className="grid grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Invoice Date</p>
-                                    <p className="font-bold text-slate-800">{selectedPayment.date}</p>
+                                    <p className="font-bold text-slate-800">{new Date(selectedPayment.invoiceDate).toLocaleDateString('en-IN')}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Payment Date</p>
-                                    <p className="font-bold text-slate-800">{selectedPayment.paymentDate}</p>
+                                    <p className="font-bold text-slate-800">{selectedPayment.paymentDate ? new Date(selectedPayment.paymentDate).toLocaleDateString('en-IN') : '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Invoice Amount</p>
@@ -426,18 +518,18 @@ const PaymentList = () => {
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Payment Mode</p>
-                                    <p className="font-bold text-slate-800">{selectedPayment.mode}</p>
+                                    <p className="font-bold text-slate-800">{selectedPayment.paymentMode || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Transaction Ref</p>
-                                    <p className="font-mono text-sm text-slate-600">{selectedPayment.ref}</p>
+                                    <p className="font-mono text-sm text-slate-600">{selectedPayment.transactionReference || '-'}</p>
                                 </div>
                             </div>
 
                             <div>
                                 <p className="text-xs text-slate-500 font-medium mb-1">Remarks</p>
                                 <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                    {selectedPayment.remarks}
+                                    {selectedPayment.remarks || 'No remarks'}
                                 </p>
                             </div>
 
@@ -507,6 +599,17 @@ const PaymentList = () => {
                     </div>
                 </div>
             )}
+
+            {/* Create Payment Modal */}
+            <CreatePaymentModal
+                isOpen={createModalOpen}
+                onClose={() => setCreateModalOpen(false)}
+                onSuccess={(payment) => {
+                    fetchPayments();
+                    fetchStats();
+                }}
+                vendors={vendors}
+            />
 
         </div>
     );
