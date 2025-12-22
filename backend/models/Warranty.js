@@ -103,7 +103,7 @@ warrantySchema.pre('save', async function (next) {
 warrantySchema.index({ status: 1 }); // Filter by status
 warrantySchema.index({ claimType: 1 }); // Filter by claim type
 warrantySchema.index({ chassisNumber: 1 }); // Lookup by chassis
-warrantySchema.index({ claimNumber: 1 }); // Lookup by claim number
+// claimNumber already has unique:true, no need for additional index
 warrantySchema.index({ createdAt: -1 }); // Sort by date
 
 module.exports = mongoose.model('Warranty', warrantySchema);

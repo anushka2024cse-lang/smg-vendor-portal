@@ -45,8 +45,8 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-// Indexes for performance
-UserSchema.index({ email: 1 }); // For login queries (email is already unique, but this helps)
+// No need for email index - unique:true already creates one
+// Removed: UserSchema.index({ email: 1 });
 
 UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {

@@ -141,7 +141,7 @@ sorSchema.pre('findOneAndUpdate', function (next) {
 // Indexes for performance
 sorSchema.index({ status: 1 }); // Filter by status
 sorSchema.index({ createdBy: 1 }); // User's SORs
-sorSchema.index({ sorNumber: 1 }); // Lookup by SOR number
+// sorNumber already has unique:true, no need for additional index
 sorSchema.index({ status: 1, createdAt: -1 }); // Status + date
 sorSchema.index({ vendor: 1 }); // Filter by vendor
 
