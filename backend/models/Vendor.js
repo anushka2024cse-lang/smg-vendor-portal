@@ -4,8 +4,9 @@ const VendorSchema = new mongoose.Schema({
     vendorId: {
         type: String,
         unique: true
-        // We'll auto-generate this if not provided, or handle client-side
     },
+
+    // Core Fields
     name: {
         type: String,
         required: [true, 'Please add a vendor name']
@@ -33,31 +34,123 @@ const VendorSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a phone number']
     },
+
+    // Document Control
+    documentControl: {
+        code: String,
+        revisionDate: Date,
+        revisionStatus: String
+    },
+
+    // Extended Supplier Details
+    companyPrefix: {
+        type: String,
+        enum: ['Company', 'Mr', 'Ms'],
+        default: 'Company'
+    },
+    houseNo: String,
+    nearestRailwayStation: String,
+    nearestAirport: String,
+
+    // Address
     address: {
         street: String,
         state: String,
         zip: String,
         country: { type: String, default: 'India' }
     },
-    tax: {
-        pan: String,
-        gst: String
+
+    // Financial Details
+    currency: {
+        type: String,
+        enum: ['INR', 'USD', 'EURO'],
+        default: 'INR'
     },
+    paymentTerms: String,
+
+    // Extended Contact Details
+    designation: String,
+    faxNo: String,
+    alternateEmailId: String,
+    gstContact: {
+        phone: String,
+        email: String
+    },
+
+    // Bank Details
     bank: {
         name: String,
         account: String,
         ifsc: String
     },
+
+    // Business Classification
+    vendorStatus: [{
+        type: String,
+        enum: ['Proprietor', 'Ltd', 'Co', 'Partnership']
+    }],
+    industrialStatus: {
+        type: String,
+        enum: ['Micro', 'Small', 'Medium', 'Large', 'Not Applicable']
+    },
+
+    // Staff Details
+    staff: {
+        sales: Number,
+        service: Number,
+        others: Number,
+        total: Number
+    },
+
+    // Products
+    dealerProducts: String,
+    productRange: String,
+
+    // Tax & Compliance
+    tax: {
+        pan: String,
+        gst: String,
+        tan: String,
+        gstVendorClass: {
+            type: String,
+            enum: ['Registered', 'Not Registered', 'Composition', 'Govt Org']
+        }
+    },
+
+    // SMG Registration
+    registeredWithSMG: {
+        type: String,
+        enum: ['Yes', 'No']
+    },
+
+    // Logistics
+    materialSupplyMode: [{
+        type: String,
+        enum: ['By Road', 'Courier', 'Other']
+    }],
+    modeOfTransport: String,
+
+    // CRITICAL: Document File Paths
+    documents: {
+        cancelledCheque: String,
+        panDocument: String,
+        gstDocument: String,
+        tanDocument: String,
+        signatureDocument: String
+    },
+
+    // Metadata for future extensions
+    metadata: mongoose.Schema.Types.Mixed,
+
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
 
-// Auto-generate helper if needed, but for now we trust the input or post-middleware
+// Auto-generate vendorId if not provided
 VendorSchema.pre('save', function (next) {
     if (!this.vendorId) {
-        // Simple ID generation logic
         this.vendorId = 'V-' + Math.floor(1000 + Math.random() * 9000);
     }
     next();

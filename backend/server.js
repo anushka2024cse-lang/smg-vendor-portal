@@ -47,13 +47,17 @@ app.use(cors({
         'https://demo1smg.netlify.app',
         'https://demo-smg-vendor.netlify.app'
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 app.use(helmet());
 // Use Winston for HTTP logging
 app.use(morgan('combined', { stream: logger.stream }));
+
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rate Limiting
 const rateLimit = require('express-rate-limit');
@@ -95,12 +99,17 @@ app.use('/api/v1/inventory', require('./routes/inventory'));
 app.use('/api/v1/vendors', require('./routes/vendor'));
 app.use('/api/v1/purchase-orders', require('./routes/purchaseOrder'));
 app.use('/api/v1/components', require('./routes/components'));
-app.use('/api/v1/sor', require('./routes/sor'));
-app.use('/api/v1/notifications', require('./routes/notification'));
+// app.use('/api/tickets', require('./routes/ticketRoutes')); // TODO: Create this file
+// app.use('/api/notifications', require('./routes/notificationRoutes')); // TODO: Create this file
+app.use('/api/spare-parts', require('./routes/sparePartRoutes'));
+app.use('/api/hsrp', require('./routes/hsrpRoutes'));
+app.use('/api/rsa', require('./routes/rsaRoutes'));
+app.use('/api/die-plans', require('./routes/diePlanRoutes'));
 app.use('/api/v1/warranty', require('./routes/warranty'));
 app.use('/api/v1/orders', require('./routes/order'));
 app.use('/api/v1/payments', require('./routes/payment'));
 app.use('/api/v1/certificates', require('./routes/certificate'));
+app.use('/api/v1/admin', require('./routes/admin'));
 
 // Error Handling Middleware (must be last)
 const { errorHandler, notFound } = require('./middleware/errorHandler');
