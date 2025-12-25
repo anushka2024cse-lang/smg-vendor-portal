@@ -1,339 +1,668 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Check, Upload, Building, CreditCard, FileCheck, Truck, Save } from 'lucide-react';
+import { ChevronLeft, Upload, Save } from 'lucide-react';
 import apiClient from '../../services/apiClient';
 
 const VendorOnboarding = () => {
     const navigate = useNavigate();
-    const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
-        // Step 1: Identity
-        name: '',
-        businessType: '',
-        proprietorName: '',
-        email: '',
-        phone: '',
-        staffStrength: '',
-        // Step 2: Address & Contact
-        address: '',
+        // Document Control
+        documentCode: '',
+        revisionDate: '',
+        revisionStatus: '',
+
+        // 1. Name of Supplier
+        companyPrefix: 'Company',
+        supplierName: '',
+
+        // 2. Address
+        houseNo: '',
+        street: '',
         city: '',
         state: '',
-        pincode: '',
-        nearestRailway: '',
-        preferredTransport: '',
-        productRange: '',
-        // Step 3: Finance
+        pinCode: '',
+        nearestRailwayStation: '',
+        nearestAirport: '',
+
+        // 3. Currency
         currency: 'INR',
+
+        // 4. Payment Terms
         paymentTerms: '',
+
+        // 5-8. Contact Details
+        contactPerson: '',
+        designation: '',
+        phoneWithCode: '',
+        faxNo: '',
+        mobileWithCountryCode: '',
+        emailId: '',
+        alternateEmailId: '',
+
+        // 8A. GST Contact
+        gstContactNo: '',
+        gstEmailId: '',
+
+        // 9. Bank Details
         bankName: '',
-        accountNumber: '',
         ifscCode: '',
-        // Step 4: Compliance
-        pan: '',
-        tan: '',
-        gstStatus: '',
+        accountNumber: '',
+        cancelledCheque: null,
+
+        // 10. Status of Vendor
+        vendorStatus: [],
+
+        // 11. Industrial Status
+        industrialStatus: '',
+
+        // 12. Staff
+        staffInSales: '',
+        staffInService: '',
+        staffOthers: '',
+        staffTotal: '',
+
+        // 13. Dealer/Distributor
+        dealerProducts: '',
+
+        // 14. Product Range
+        productRange: '',
+
+        // 15. PAN
+        panNumber: '',
+        panDocument: null,
+
+        // 16. GST
         gstNumber: '',
-        msmeRegistration: ''
+        gstDocument: null,
+
+        // 17. GST Vendor Class
+        gstVendorClass: '',
+
+        // 18. TAN
+        tanNumber: '',
+        tanDocument: null,
+
+        // 19. Registered with SMG
+        registeredWithSMG: '',
+
+        // 20. Mode of Material Supply
+        materialSupplyMode: [],
+
+        // 21. Mode of Transport
+        modeOfTransport: '',
+
+        // 22. Signature
+        signatureDocument: null,
     });
 
-    const steps = [
-        { id: 1, label: 'Identity Details', icon: Building },
-        { id: 2, label: 'Address & Contact', icon: Truck },
-        { id: 3, label: 'Finance & Bank', icon: CreditCard },
-        { id: 4, label: 'Compliance (Tax)', icon: FileCheck },
-    ];
+    const [loading, setLoading] = useState(false);
 
-    const handleInputChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    // Load draft from localStorage on component mount
+    useEffect(() => {
+        const draft = localStorage.getItem('vendorDraft');
+        if (draft) {
+            try {
+                const parsed = JSON.parse(draft);
+                // Don't load file objects from localStorage
+                const { savedAt, ...draftData } = parsed;
+                setFormData(prev => ({ ...prev, ...draftData }));
+
+                const savedDate = new Date(savedAt).toLocaleString();
+                console.log(`Draft loaded from ${savedDate}`);
+            } catch (e) {
+                console.error('Failed to load draft:', e);
+            }
+        }
+    }, []);
+
+    const update = (key, value) => {
+        setFormData(prev => ({ ...prev, [key]: value }));
     };
 
-    const handleNext = () => setCurrentStep(prev => Math.min(prev + 1, 4));
-    const handlePrev = () => setCurrentStep(prev => Math.max(prev - 1, 1));
-
-    const handleSubmit = async () => {
-        try {
-            // Validate required fields
-            if (!formData.name || !formData.businessType || !formData.email || !formData.phone) {
-                alert('Please fill in all required fields (Company Name, Business Type, Email, and Phone)');
-                return;
+    const handleCheckboxArray = (key, value) => {
+        setFormData(prev => {
+            const current = prev[key] || [];
+            if (current.includes(value)) {
+                return { ...prev, [key]: current.filter(v => v !== value) };
+            } else {
+                return { ...prev, [key]: [...current, value] };
             }
+        });
+    };
 
-            // Map form data to backend Vendor model schema
+    const handleFileChange = (key, file) => {
+        update(key, file);
+    };
+
+    // Save draft to localStorage
+    const saveDraft = () => {
+        try {
+            // Exclude file objects from draft (can't serialize File objects)
+            const { cancelledCheque, panDocument, gstDocument, tanDocument, signatureDocument, ...textData } = formData;
+
+            localStorage.setItem('vendorDraft', JSON.stringify({
+                ...textData,
+                savedAt: new Date().toISOString()
+            }));
+
+            alert('✅ Draft saved successfully! You can resume later.');
+        } catch (e) {
+            console.error('Failed to save draft:', e);
+            alert('❌ Failed to save draft');
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // Validate required fields
+        if (!formData.supplierName || !formData.emailId || !formData.phoneWithCode) {
+            alert('Please fill in all required fields (Supplier Name, Email, Phone)');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            // Create FormData for multipart upload
+            const formDataToSend = new FormData();
+
+            // Prepare complete vendor data object with all extended fields
             const vendorData = {
-                name: formData.name,
-                type: formData.businessType, // Backend uses 'type' not 'businessType'
-                contact: formData.proprietorName || 'N/A', // Backend uses 'contact' not 'contactPerson'
-                email: formData.email,
-                phone: formData.phone,
+                name: formData.supplierName,
+                type: formData.vendorStatus.join(', ') || 'N/A',
+                contact: formData.contactPerson || 'N/A',
+                email: formData.emailId,
+                phone: formData.mobileWithCountryCode || formData.phoneWithCode,
                 city: formData.city || '',
+                companyPrefix: formData.companyPrefix,
+                houseNo: formData.houseNo,
                 address: {
-                    street: formData.address || '',
-                    state: formData.state || '',
-                    zip: formData.pincode || '', // Backend uses 'zip' not 'pincode'
+                    street: formData.street,
+                    state: formData.state,
+                    zip: formData.pinCode,
                     country: 'India'
                 },
-                bank: {
-                    name: formData.bankName || '',
-                    account: formData.accountNumber || '',
-                    ifsc: formData.ifscCode || ''
+                nearestRailwayStation: formData.nearestRailwayStation,
+                nearestAirport: formData.nearestAirport,
+                currency: formData.currency,
+                paymentTerms: formData.paymentTerms,
+                designation: formData.designation,
+                faxNo: formData.faxNo,
+                alternateEmailId: formData.alternateEmailId,
+                gstContact: {
+                    phone: formData.gstContactNo,
+                    email: formData.gstEmailId
                 },
+                bank: {
+                    name: formData.bankName,
+                    account: formData.accountNumber,
+                    ifsc: formData.ifscCode
+                },
+                vendorStatus: formData.vendorStatus,
+                industrialStatus: formData.industrialStatus,
+                staff: {
+                    sales: formData.staffInSales,
+                    service: formData.staffInService,
+                    others: formData.staffOthers,
+                    total: formData.staffTotal
+                },
+                dealerProducts: formData.dealerProducts,
+                productRange: formData.productRange,
                 tax: {
-                    pan: formData.pan || '',
-                    gst: formData.gstNumber || ''
+                    pan: formData.panNumber,
+                    gst: formData.gstNumber,
+                    tan: formData.tanNumber,
+                    gstVendorClass: formData.gstVendorClass
+                },
+                registeredWithSMG: formData.registeredWithSMG,
+                materialSupplyMode: formData.materialSupplyMode,
+                modeOfTransport: formData.modeOfTransport,
+                documentControl: {
+                    code: formData.documentCode,
+                    revisionDate: formData.revisionDate,
+                    revisionStatus: formData.revisionStatus
                 }
             };
 
-            console.log('Submitting vendor:', vendorData);
+            // Add vendor data as JSON string
+            formDataToSend.append('vendorData', JSON.stringify(vendorData));
 
-            const response = await apiClient.post('/vendors', vendorData);
+            // Add files if they exist
+            if (formData.cancelledCheque) {
+                formDataToSend.append('cancelledCheque', formData.cancelledCheque);
+            }
+            if (formData.panDocument) {
+                formDataToSend.append('panDocument', formData.panDocument);
+            }
+            if (formData.gstDocument) {
+                formDataToSend.append('gstDocument', formData.gstDocument);
+            }
+            if (formData.tanDocument) {
+                formDataToSend.append('tanDocument', formData.tanDocument);
+            }
+            if (formData.signatureDocument) {
+                formDataToSend.append('signatureDocument', formData.signatureDocument);
+            }
+
+            console.log('Submitting vendor with files...');
+
+            // Send as multipart/form-data
+            const response = await apiClient.post('/vendors', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
             if (response.data) {
-                alert('Vendor registered successfully!');
+                alert('Vendor registered successfully with all documents!');
+                localStorage.removeItem('vendorDraft'); // Clear draft on success
                 navigate('/vendor/list');
             }
         } catch (error) {
             console.error('Error submitting vendor:', error);
             const errorMessage = error.response?.data?.message || error.message || 'Failed to register vendor';
             alert(`Failed to register vendor: ${errorMessage}`);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="p-8 max-w-5xl mx-auto min-h-screen">
+        <div className="p-8 max-w-6xl mx-auto min-h-screen bg-slate-50">
+            {/* Back Button */}
+            <button
+                onClick={() => navigate('/vendor/list')}
+                className="flex items-center gap-1 text-sm text-slate-500 hover:text-blue-900 transition-colors mb-4"
+            >
+                <ChevronLeft size={16} /> Back to Vendor List
+            </button>
 
-            {/* Header */}
-            <div className="mb-8">
-                <button
-                    onClick={() => navigate('/vendor/list')}
-                    className="flex items-center gap-1 text-sm text-slate-500 hover:text-blue-900 transition-colors mb-2"
-                >
-                    <ChevronLeft size={16} /> Back to Directory
-                </button>
-                <h1 className="text-3xl font-bold text-slate-900">New Vendor Registration</h1>
-                <p className="text-slate-500 mt-1">Complete the onboarding wizard to register a new supplier.</p>
-            </div>
-
-            {/* Stepper */}
-            <div className="mb-10">
-                <div className="flex items-center justify-between relative">
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 -z-10 rounded-full"></div>
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-900 -z-10 rounded-full transition-all duration-500"
-                        style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}></div>
-
-                    {steps.map((step) => {
-                        const isCompleted = step.id < currentStep;
-                        const isCurrent = step.id === currentStep;
-
-                        return (
-                            <div key={step.id} className="flex flex-col items-center gap-2 bg-background px-2">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
-                                    ${isCompleted ? 'bg-blue-900 border-blue-900 text-white' :
-                                        isCurrent ? 'bg-white border-blue-900 text-blue-900 shadow-lg scale-110' :
-                                            'bg-white border-slate-300 text-slate-300'}`}>
-                                    {isCompleted ? <Check size={20} /> : <step.icon size={20} />}
-                                </div>
-                                <span className={`text-sm font-medium ${isCurrent ? 'text-blue-900' : 'text-slate-500'}`}>
-                                    {step.label}
-                                </span>
-                            </div>
-                        );
-                    })}
+            {/* Main Form Card */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+                {/* Header */}
+                <div className="text-center py-8 border-b border-slate-200">
+                    <h1 className="text-2xl font-semibold text-gray-900">
+                        SMG ELECTRIC SCOOTERS LTD
+                    </h1>
+                    <p className="text-lg font-medium mt-1">Vendor Onboarding Form</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                        (To be filled by Vendor in CAPITAL LETTERS)
+                    </p>
                 </div>
+
+                <form onSubmit={handleSubmit} className="p-8 space-y-8">
+
+                    {/* DOCUMENT CONTROL */}
+                    <Section title="Document Control">
+                        <Grid cols={3}>
+                            <Input label="Code" value={formData.documentCode} onChange={(e) => update('documentCode', e.target.value)} />
+                            <Input type="date" label="Revision Date" value={formData.revisionDate} onChange={(e) => update('revisionDate', e.target.value)} />
+                            <Input label="Revision Status" value={formData.revisionStatus} onChange={(e) => update('revisionStatus', e.target.value)} />
+                        </Grid>
+                    </Section>
+
+                    {/* 1. NAME OF SUPPLIER */}
+                    <Section title="1. Name of Supplier">
+                        <Grid cols={3}>
+                            <Select
+                                label="Company / Mr / Ms"
+                                value={formData.companyPrefix}
+                                onChange={(e) => update('companyPrefix', e.target.value)}
+                                options={["Company", "Mr", "Ms"]}
+                            />
+                            <div className="md:col-span-2">
+                                <Input
+                                    label="Supplier Name (CAPITAL LETTERS) *"
+                                    value={formData.supplierName}
+                                    onChange={(e) => update('supplierName', e.target.value.toUpperCase())}
+                                    required
+                                />
+                            </div>
+                        </Grid>
+                    </Section>
+
+                    {/* 2. ADDRESS */}
+                    <Section title="2. Address">
+                        <Grid cols={3}>
+                            <Input label="House No" value={formData.houseNo} onChange={(e) => update('houseNo', e.target.value)} />
+                            <Input label="Street" value={formData.street} onChange={(e) => update('street', e.target.value)} />
+                            <Input label="City" value={formData.city} onChange={(e) => update('city', e.target.value)} />
+                            <Input label="State" value={formData.state} onChange={(e) => update('state', e.target.value)} />
+                            <Input label="Pin Code" value={formData.pinCode} onChange={(e) => update('pinCode', e.target.value)} />
+                            <Input label="Nearest Railway Station" value={formData.nearestRailwayStation} onChange={(e) => update('nearestRailwayStation', e.target.value)} />
+                            <div className="md:col-span-3">
+                                <Input label="Nearest Airport" value={formData.nearestAirport} onChange={(e) => update('nearestAirport', e.target.value)} />
+                            </div>
+                        </Grid>
+                    </Section>
+
+                    {/* 3. CURRENCY */}
+                    <Section title="3. Currency">
+                        <div className="flex gap-8">
+                            {["INR", "USD", "EURO"].map(c => (
+                                <label key={c} className="flex items-center gap-2 text-sm font-medium">
+                                    <input
+                                        type="radio"
+                                        name="currency"
+                                        checked={formData.currency === c}
+                                        onChange={() => update('currency', c)}
+                                        className="w-4 h-4 text-blue-900 focus:ring-blue-900"
+                                    />
+                                    {c}
+                                </label>
+                            ))}
+                        </div>
+                    </Section>
+
+                    {/* 4. PAYMENT TERMS */}
+                    <Section title="4. Payment Terms (V001)">
+                        <Input value={formData.paymentTerms} onChange={(e) => update('paymentTerms', e.target.value)} placeholder="e.g., Net 30 Days" />
+                    </Section>
+
+                    {/* 5–8 CONTACT DETAILS */}
+                    <Section title="5–8. Contact Details">
+                        <Grid cols={3}>
+                            <Input label="Contact Person" value={formData.contactPerson} onChange={(e) => update('contactPerson', e.target.value)} />
+                            <Input label="Designation" value={formData.designation} onChange={(e) => update('designation', e.target.value)} />
+                            <Input label="Phone (STD Code) *" value={formData.phoneWithCode} onChange={(e) => update('phoneWithCode', e.target.value)} required />
+                            <Input label="Fax No" value={formData.faxNo} onChange={(e) => update('faxNo', e.target.value)} />
+                            <Input label="Mobile (Country Code)" value={formData.mobileWithCountryCode} onChange={(e) => update('mobileWithCountryCode', e.target.value)} />
+                            <Input label="Email ID *" type="email" value={formData.emailId} onChange={(e) => update('emailId', e.target.value)} required />
+                            <Input label="Alternate Email ID" type="email" value={formData.alternateEmailId} onChange={(e) => update('alternateEmailId', e.target.value)} />
+                        </Grid>
+                    </Section>
+
+                    {/* 8A GST CONTACT */}
+                    <Section title="8(A). Contact Details (Dedicated for GST)">
+                        <Grid cols={2}>
+                            <Input label="GST Contact No" value={formData.gstContactNo} onChange={(e) => update('gstContactNo', e.target.value)} />
+                            <Input label="GST Email ID" type="email" value={formData.gstEmailId} onChange={(e) => update('gstEmailId', e.target.value)} />
+                        </Grid>
+                    </Section>
+
+                    {/* 9 BANK DETAILS */}
+                    <Section title="9. Bank Details">
+                        <Grid cols={3}>
+                            <Input label="Bank Name" value={formData.bankName} onChange={(e) => update('bankName', e.target.value)} />
+                            <Input label="IFSC Code" value={formData.ifscCode} onChange={(e) => update('ifscCode', e.target.value)} />
+                            <Input label="Account Number" value={formData.accountNumber} onChange={(e) => update('accountNumber', e.target.value)} />
+                        </Grid>
+                        <FileUploadBox
+                            label="Cancelled Cheque (PDF)"
+                            file={formData.cancelledCheque}
+                            onChange={(file) => handleFileChange('cancelledCheque', file)}
+                        />
+                    </Section>
+
+                    {/* 10 STATUS OF VENDOR */}
+                    <Section title="10. Status of Vendor">
+                        <Grid cols={4}>
+                            {["Proprietor", "Ltd", "Co", "Partnership"].map(v => (
+                                <CheckboxItem
+                                    key={v}
+                                    label={v}
+                                    checked={formData.vendorStatus.includes(v)}
+                                    onChange={() => handleCheckboxArray('vendorStatus', v)}
+                                />
+                            ))}
+                        </Grid>
+                    </Section>
+
+                    {/* 11 INDUSTRIAL STATUS */}
+                    <Section title="11. Industrial Status">
+                        <Grid cols={5}>
+                            {["Micro", "Small", "Medium", "Large", "Not Applicable"].map(v => (
+                                <label key={v} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="radio"
+                                        name="industrialStatus"
+                                        checked={formData.industrialStatus === v}
+                                        onChange={() => update('industrialStatus', v)}
+                                        className="w-4 h-4 text-blue-900 focus:ring-blue-900"
+                                    />
+                                    {v}
+                                </label>
+                            ))}
+                        </Grid>
+                    </Section>
+
+                    {/* 12 STAFF */}
+                    <Section title="12. No. of Staff">
+                        <Grid cols={4}>
+                            <Input label="In Sales" type="number" value={formData.staffInSales} onChange={(e) => update('staffInSales', e.target.value)} />
+                            <Input label="In Service" type="number" value={formData.staffInService} onChange={(e) => update('staffInService', e.target.value)} />
+                            <Input label="Others" type="number" value={formData.staffOthers} onChange={(e) => update('staffOthers', e.target.value)} />
+                            <Input label="Total" type="number" value={formData.staffTotal} onChange={(e) => update('staffTotal', e.target.value)} />
+                        </Grid>
+                    </Section>
+
+                    {/* 13 DEALER / DISTRIBUTOR */}
+                    <Section title="13. Dealer / Distributor">
+                        <Input label="Brand / Products / Items" value={formData.dealerProducts} onChange={(e) => update('dealerProducts', e.target.value)} />
+                    </Section>
+
+                    {/* 14 PRODUCT RANGE */}
+                    <Section title="14. Product Range">
+                        <Input label="Brand / Products / Items" value={formData.productRange} onChange={(e) => update('productRange', e.target.value)} />
+                    </Section>
+
+                    {/* 15 PAN */}
+                    <Section title="15. PAN">
+                        <Input label="PAN Number" value={formData.panNumber} onChange={(e) => update('panNumber', e.target.value.toUpperCase())} placeholder="ABCDE1234F" />
+                        <FileUploadBox
+                            label="PAN Photocopy (PDF)"
+                            file={formData.panDocument}
+                            onChange={(file) => handleFileChange('panDocument', file)}
+                        />
+                    </Section>
+
+                    {/* 16 GST */}
+                    <Section title="16. GST">
+                        <Input label="GST Number" value={formData.gstNumber} onChange={(e) => update('gstNumber', e.target.value.toUpperCase())} placeholder="22AAAAA0000A1Z5" />
+                        <FileUploadBox
+                            label="GST Registration (PDF)"
+                            file={formData.gstDocument}
+                            onChange={(file) => handleFileChange('gstDocument', file)}
+                        />
+                    </Section>
+
+                    {/* 17 GST VENDOR CLASS */}
+                    <Section title="17. GST Vendor Class">
+                        <Grid cols={4}>
+                            {["Registered", "Not Registered", "Composition", "Govt Org"].map(v => (
+                                <label key={v} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="radio"
+                                        name="gstVendorClass"
+                                        checked={formData.gstVendorClass === v}
+                                        onChange={() => update('gstVendorClass', v)}
+                                        className="w-4 h-4 text-blue-900 focus:ring-blue-900"
+                                    />
+                                    {v}
+                                </label>
+                            ))}
+                        </Grid>
+                    </Section>
+
+                    {/* 18 TAN */}
+                    <Section title="18. TAN">
+                        <Input label="TAN Number" value={formData.tanNumber} onChange={(e) => update('tanNumber', e.target.value.toUpperCase())} placeholder="ABCD12345E" />
+                        <FileUploadBox
+                            label="TAN Photocopy (PDF)"
+                            file={formData.tanDocument}
+                            onChange={(file) => handleFileChange('tanDocument', file)}
+                        />
+                    </Section>
+
+                    {/* 19 REGISTERED WITH SMG */}
+                    <Section title="19. Registered with SMG Electric">
+                        <Grid cols={2}>
+                            {["Yes", "No"].map(v => (
+                                <label key={v} className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="radio"
+                                        name="registeredWithSMG"
+                                        checked={formData.registeredWithSMG === v}
+                                        onChange={() => update('registeredWithSMG', v)}
+                                        className="w-4 h-4 text-blue-900 focus:ring-blue-900"
+                                    />
+                                    {v}
+                                </label>
+                            ))}
+                        </Grid>
+                    </Section>
+
+                    {/* 20 MODE OF MATERIAL */}
+                    <Section title="20. Mode of Material Supply">
+                        <Grid cols={3}>
+                            {["By Road", "Courier", "Other"].map(v => (
+                                <CheckboxItem
+                                    key={v}
+                                    label={v}
+                                    checked={formData.materialSupplyMode.includes(v)}
+                                    onChange={() => handleCheckboxArray('materialSupplyMode', v)}
+                                />
+                            ))}
+                        </Grid>
+                    </Section>
+
+                    {/* 21 TRANSPORT */}
+                    <Section title="21. Mode of Transport">
+                        <Input value={formData.modeOfTransport} onChange={(e) => update('modeOfTransport', e.target.value)} placeholder="Specify transport mode" />
+                    </Section>
+
+                    {/* 22 SIGNATURE */}
+                    <Section title="22. Signature of Vendor with Stamp">
+                        <FileUploadBox
+                            label="Signature (PDF)"
+                            file={formData.signatureDocument}
+                            onChange={(file) => handleFileChange('signatureDocument', file)}
+                        />
+                    </Section>
+
+                    {/* SUBMIT BUTTONS */}
+                    <div className="flex justify-end gap-4 pt-6 border-t border-slate-200">
+                        <button
+                            type="button"
+                            onClick={saveDraft}
+                            className="px-6 py-3 text-slate-700 bg-white border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50 transition-colors flex items-center gap-2"
+                        >
+                            💾 Save as Draft
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-8 py-3 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-colors shadow-md hover:shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Save size={18} />
+                            {loading ? 'Submitting...' : 'Submit Application'}
+                        </button>
+                    </div>
+
+                </form>
             </div>
-
-            {/* Form Content */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8 min-h-[400px]">
-
-                {/* STEP 1: IDENTITY */}
-                {currentStep === 1 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Company Identity</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Company Name *</label>
-                                <input type="text" value={formData.name} onChange={(e) => handleInputChange('name', e.target.value)} placeholder="e.g. Meenakshi Polymers" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Business Type *</label>
-                                <select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 outline-none">
-                                    <option value="">Select Type</option>
-                                    <option value="Private Limited">Private Limited</option>
-                                    <option value="Public Limited">Public Limited</option>
-                                    <option value="Proprietorship">Proprietorship</option>
-                                    <option value="Partnership">Partnership</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Proprietor / MD Name</label>
-                                <input type="text" value={formData.proprietorName} onChange={(e) => handleInputChange('proprietorName', e.target.value)} placeholder="Full Name" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Email *</label>
-                                <input type="email" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} placeholder="contact@company.com" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 outline-none" required />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Phone Number *</label>
-                                <input type="tel" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="9876543210" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 outline-none" required />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Staff Strength</label>
-                                <input type="number" value={formData.staffStrength} onChange={(e) => handleInputChange('staffStrength', e.target.value)} placeholder="e.g. 50" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-900/10 focus:border-blue-900 outline-none" />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* STEP 2: ADDRESS */}
-                {currentStep === 2 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Address & Logistics</h2>
-
-                        {/* Registered Office */}
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <h3 className="font-semibold text-slate-700 mb-4 flex items-center gap-2"><Building size={16} /> Registered Office</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="md:col-span-2">
-                                    <input type="text" value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} placeholder="Street Address / Plot No" className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none" />
-                                </div>
-                                <input type="text" value={formData.city} onChange={(e) => handleInputChange('city', e.target.value)} placeholder="City" className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none" />
-                                <input type="text" value={formData.state} onChange={(e) => handleInputChange('state', e.target.value)} placeholder="State" className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none" />
-                                <input type="text" value={formData.pincode} onChange={(e) => handleInputChange('pincode', e.target.value)} placeholder="Pincode" className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none" />
-                                <input type="text" value={formData.nearestRailway} onChange={(e) => handleInputChange('nearestRailway', e.target.value)} placeholder="Nearest Railway Station" className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                        </div>
-
-                        {/* Dispatch Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Preferred Transport</label>
-                                <select value={formData.preferredTransport} onChange={(e) => handleInputChange('preferredTransport', e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none">
-                                    <option value="">Select</option>
-                                    <option value="By Road">By Road</option>
-                                    <option value="Courier">Courier</option>
-                                    <option value="Rail">Rail</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Product Range</label>
-                                <input type="text" value={formData.productRange} onChange={(e) => handleInputChange('productRange', e.target.value)} placeholder="e.g. Plastic Molded Parts" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* STEP 3: FINANCE */}
-                {currentStep === 3 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Financial Details</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Currency</label>
-                                <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none">
-                                    <option>INR (Indian Rupee)</option>
-                                    <option>USD (US Dollar)</option>
-                                    <option>EUR (Euro)</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Payment Terms</label>
-                                <select value={formData.paymentTerms} onChange={(e) => handleInputChange('paymentTerms', e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none">
-                                    <option value="">Select</option>
-                                    <option value="Net 30 Days">Net 30 Days</option>
-                                    <option value="Net 45 Days">Net 45 Days</option>
-                                    <option value="Advance">Advance</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Bank Name</label>
-                                <input type="text" value={formData.bankName} onChange={(e) => handleInputChange('bankName', e.target.value)} placeholder="e.g. HDFC Bank" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Account Number</label>
-                                <input type="text" value={formData.accountNumber} onChange={(e) => handleInputChange('accountNumber', e.target.value)} placeholder="XXXXXXXXXXXXXXXX" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">IFSC Code</label>
-                                <input type="text" value={formData.ifscCode} onChange={(e) => handleInputChange('ifscCode', e.target.value)} placeholder="HDFC0001234" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-
-                            {/* Upload Cancelled Cheque */}
-                            <div className="md:col-span-2 border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-500 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                                <Upload size={32} className="mb-2 text-slate-400" />
-                                <span className="text-sm font-medium">Upload Cancelled Cheque</span>
-                                <span className="text-xs text-slate-400 mt-1">PDF, JPG or PNG up to 5MB</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* STEP 4: COMPLIANCE */}
-                {currentStep === 4 && (
-                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                        <h2 className="text-xl font-bold text-slate-800 border-b border-slate-100 pb-3">Tax & Compliance</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">PAN Number *</label>
-                                <input type="text" value={formData.pan} onChange={(e) => handleInputChange('pan', e.target.value)} placeholder="ABCDE1234F" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">TAN Number</label>
-                                <input type="text" value={formData.tan} onChange={(e) => handleInputChange('tan', e.target.value)} placeholder="ABCD12345E" className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">GST Registration Status</label>
-                                <select value={formData.gstStatus} onChange={(e) => handleInputChange('gstStatus', e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none">
-                                    <option value="">Select</option>
-                                    <option value="Registered">Registered</option>
-                                    <option value="Unregistered">Unregistered</option>
-                                    <option value="Composition Scheme">Composition Scheme</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">GST Number</label>
-                                <input type="text" value={formData.gstNumber} onChange={(e) => handleInputChange('gstNumber', e.target.value)} placeholder="07AABCT..." className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-
-                            <div className="md:col-span-2 space-y-2">
-                                <label className="text-sm font-medium text-slate-700">MSME / Udyam Registration (Optional)</label>
-                                <input type="text" value={formData.msmeRegistration} onChange={(e) => handleInputChange('msmeRegistration', e.target.value)} placeholder="UDYAM-XX-..." className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-            </div>
-
-            {/* Footer Actions */}
-            <div className="mt-6 flex items-center justify-between">
-                <button
-                    onClick={handlePrev}
-                    disabled={currentStep === 1}
-                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${currentStep === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 hover:bg-slate-100 bg-white border border-slate-200'}`}
-                >
-                    Previous Step
-                </button>
-
-                <div className="flex gap-4">
-                    <button className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors">
-                        Save as Draft
-                    </button>
-                    <button
-                        onClick={currentStep === 4 ? handleSubmit : handleNext}
-                        className="px-8 py-2.5 bg-blue-900 text-white rounded-lg font-medium hover:bg-blue-800 shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-                    >
-                        {currentStep === 4 ? (
-                            <>
-                                <Save size={18} /> Submit Application
-                            </>
-                        ) : (
-                            'Next Step'
-                        )}
-                    </button>
-                </div>
-            </div>
-
         </div>
     );
 };
 
 export default VendorOnboarding;
+
+/* ------------------ REUSABLE COMPONENTS ------------------ */
+
+const Section = ({ title, children }) => (
+    <div className="border border-slate-200 rounded-lg p-6 bg-slate-50">
+        <h3 className="font-semibold text-slate-800 mb-4 text-base">{title}</h3>
+        <div className="space-y-4">
+            {children}
+        </div>
+    </div>
+);
+
+const Grid = ({ cols = 3, children }) => (
+    <div className={`grid grid-cols-1 md:grid-cols-${cols} gap-4`}>
+        {children}
+    </div>
+);
+
+const Input = ({ label, type = "text", value, onChange, placeholder, required }) => (
+    <div>
+        {label && (
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+                {label}
+            </label>
+        )}
+        <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all"
+        />
+    </div>
+);
+
+const Select = ({ label, options, value, onChange }) => (
+    <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+        <select
+            value={value}
+            onChange={onChange}
+            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all"
+        >
+            <option value="">Select</option>
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+    </div>
+);
+
+const CheckboxItem = ({ label, checked, onChange }) => (
+    <label className="flex items-center gap-2 text-sm">
+        <input
+            type="checkbox"
+            checked={checked}
+            onChange={onChange}
+            className="w-4 h-4 text-blue-900 bg-white border-slate-300 rounded focus:ring-2 focus:ring-blue-900"
+        />
+        <span className="text-slate-700">{label}</span>
+    </label>
+);
+
+const FileUploadBox = ({ label, file, onChange }) => {
+    const handleFileSelect = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            onChange(selectedFile);
+        }
+    };
+
+    return (
+        <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700 mb-2">{label}</label>
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 bg-white hover:bg-slate-50 transition-colors">
+                <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id={`file-${label}`}
+                />
+                <label
+                    htmlFor={`file-${label}`}
+                    className="flex flex-col items-center justify-center cursor-pointer"
+                >
+                    <Upload size={32} className="text-slate-400 mb-2" />
+                    {file ? (
+                        <span className="text-sm font-medium text-blue-900">{file.name}</span>
+                    ) : (
+                        <>
+                            <span className="text-sm font-medium text-slate-600">Click to upload</span>
+                            <span className="text-xs text-slate-400 mt-1">PDF, JPG or PNG (Max 5MB)</span>
+                        </>
+                    )}
+                </label>
+            </div>
+        </div>
+    );
+};
