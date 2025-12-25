@@ -162,7 +162,7 @@ const ComponentDetails = () => {
                 </div>
                 <button
                     onClick={openAddModal}
-                    className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg hover:bg-slate-800 transition-all font-medium shadow-sm hover:shadow active:scale-95"
+                    className="flex items-center gap-2 bg-blue-800 text-white px-5 py-2.5 rounded-lg hover:bg-blue-900 transition-all font-medium shadow-sm hover:shadow active:scale-95"
                 >
                     <Plus size={18} />
                     Add Component
@@ -425,7 +425,7 @@ const ComponentDetails = () => {
                             <button onClick={closeModals} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">
                                 Cancel
                             </button>
-                            <button type="submit" form="componentForm" className="px-6 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm hover:shadow transition-all">
+                            <button type="submit" form="componentForm" className="px-6 py-2 text-sm font-medium text-white bg-blue-800 hover:bg-slate-800 rounded-lg shadow-sm hover:shadow transition-all">
                                 {isEditModalOpen ? 'Update Component' : 'Create Component'}
                             </button>
                         </div>

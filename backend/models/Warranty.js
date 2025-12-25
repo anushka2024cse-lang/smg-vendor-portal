@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const warrantySchema = new mongoose.Schema({
     claimNumber: {
         type: String,
-        required: true,
         unique: true
+        // Not required - will be auto-generated in pre-save hook
     },
     claimType: {
         type: String,
@@ -56,9 +56,14 @@ const warrantySchema = new mongoose.Schema({
     // Status & Dates
     status: {
         type: String,
-        enum: ['Pending', 'Under Review', 'Approved', 'Rejected', 'Pending Pickup'],
+        enum: ['Draft', 'Pending', 'Under Review', 'Approved', 'Rejected', 'Pending Pickup'],
         default: 'Pending'
     },
+    isDraft: {
+        type: Boolean,
+        default: false
+    },
+    draftSavedAt: Date,
     submittedDate: {
         type: Date,
         default: Date.now
@@ -90,12 +95,25 @@ const warrantySchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Auto-generate claim number if not provided
+// Auto-generate claim number, work order number, and defect code if not provided
 warrantySchema.pre('save', async function (next) {
     if (!this.claimNumber) {
         const count = await this.constructor.countDocuments();
         this.claimNumber = `WC-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
     }
+
+    // Auto-generate work order number
+    if (!this.workOrderNumber) {
+        const count = await this.constructor.countDocuments();
+        this.workOrderNumber = `WO-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
+    }
+
+    // Auto-generate defect code
+    if (!this.defectCode) {
+        const count = await this.constructor.countDocuments();
+        this.defectCode = `DEF-${String(count + 1).padStart(3, '0')}`;
+    }
+
     next();
 });
 

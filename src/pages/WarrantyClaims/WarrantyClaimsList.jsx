@@ -1,97 +1,82 @@
-import React, { useState } from 'react';
-import { Search, Filter, Plus, Download, Eye, CheckCircle, Clock, AlertCircle, XCircle, Edit, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Filter, Plus, Download, Eye, CheckCircle, Clock, AlertCircle, XCircle, Edit, Trash2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import warrantyClaimService from '../../services/warrantyClaimService';
 
 const WarrantyClaimsList = () => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [claims, setClaims] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [selectedClaim, setSelectedClaim] = useState(null);
+    const [rejectReason, setRejectReason] = useState('');
 
-    // Mock data based on CRM warranty claims
-    const [claims, setClaims] = useState([
-        {
-            id: 'WC-2024-001',
-            claimDate: '2024-12-15',
-            vehicleModel: 'E-Scooter X1',
-            chassisNumber: 'CH12345678',
-            componentName: 'Battery Pack',
-            partNumber: 'BP-48V-30AH',
-            customerName: 'Rajesh Kumar',
-            dealerName: 'Delhi Motors',
-            status: 'Pending',
-            claimAmount: '₹25,000',
-            failureType: 'Manufacturing Defect',
-            submittedBy: 'Dealer',
-            warrantyStatus: 'In Warranty',
-            pickupScheduled: '2024-12-20'
-        },
-        {
-            id: 'WC-2024-002',
-            claimDate: '2024-12-18',
-            vehicleModel: 'E-Scooter Pro',
-            chassisNumber: 'CH87654321',
-            componentName: 'Motor Controller',
-            partNumber: 'MC-3000W',
-            customerName: 'Priya Sharma',
-            dealerName: 'Mumbai Auto Services',
-            status: 'Approved',
-            claimAmount: '₹18,500',
-            failureType: 'Electrical Failure',
-            submittedBy: 'Service Center',
-            warrantyStatus: 'In Warranty',
-            pickupScheduled: '2024-12-19'
-        },
-        {
-            id: 'WC-2024-003',
-            claimDate: '2024-12-20',
-            vehicleModel: 'E-Scooter Lite',
-            chassisNumber: 'CH11223344',
-            componentName: 'Display Unit',
-            partNumber: 'DU-LCD-7INCH',
-            customerName: 'Amit Patel',
-            dealerName: 'Bangalore E-Vehicles',
-            status: 'Under Review',
-            claimAmount: '₹8,000',
-            failureType: 'Material Defect',
-            submittedBy: 'Dealer',
-            warrantyStatus: 'In Warranty',
-            pickupScheduled: '2024-12-22'
-        },
-        {
-            id: 'WC-2024-004',
-            claimDate: '2024-12-10',
-            vehicleModel: 'E-Scooter X1',
-            chassisNumber: 'CH99887766',
-            componentName: 'Brake Assembly',
-            partNumber: 'BA-DISC-FR',
-            customerName: 'Neha Gupta',
-            dealerName: 'Chennai Auto Hub',
-            status: 'Rejected',
-            claimAmount: '₹5,500',
-            failureType: 'Premature Wear',
-            submittedBy: 'Service Center',
-            warrantyStatus: 'Out of Warranty',
-            pickupScheduled: null
-        },
-        {
-            id: 'WC-2024-005',
-            claimDate: '2024-12-22',
-            vehicleModel: 'E-Scooter Pro',
-            chassisNumber: 'CH55443322',
-            componentName: 'Charger Unit',
-            partNumber: 'CU-48V-5A',
-            customerName: 'Vikram Singh',
-            dealerName: 'Delhi Motors',
-            status: 'Pending Pickup',
-            claimAmount: '₹12,000',
-            failureType: 'Corrosion',
-            submittedBy: 'Dealer',
-            warrantyStatus: 'In Warranty',
-            pickupScheduled: '2024-12-23'
+    useEffect(() => {
+        loadClaims();
+    }, []);
+
+    const loadClaims = async () => {
+        setLoading(true);
+        try {
+            const response = await warrantyClaimService.getAllClaims();
+            const claimsData = response.data.data.map(claim => ({
+                id: claim.claimNumber || claim._id,
+                _id: claim._id,
+                claimDate: claim.createdAt || claim.submittedDate,
+                vehicleModel: claim.vehicleModel,
+                chassisNumber: claim.chassisNumber,
+                componentName: claim.componentName,
+                partNumber: claim.partNumber,
+                customerName: claim.customerName,
+                dealerName: claim.dealerName,
+                status: claim.status,
+                claimAmount: claim.totalClaimAmount ? `₹${claim.totalClaimAmount.toLocaleString()}` : '-',
+                failureType: claim.failureType,
+                warrantyStatus: claim.warrantyStatus,
+                pickupScheduled: claim.pickupScheduled,
+                workOrderNumber: claim.workOrderNumber,
+                defectCode: claim.defectCode
+            }));
+            setClaims(claimsData);
+        } catch (error) {
+            console.error('Failed to load warranty claims:', error);
         }
-    ]);
+        setLoading(false);
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this draft?')) {
+            try {
+                await warrantyClaimService.deleteClaim(id);
+                loadClaims(); // Refresh list
+            } catch (error) {
+                console.error('Failed to delete draft:', error);
+                alert('Failed to delete draft');
+            }
+        }
+    };
+
+    const handleReject = async () => {
+        if (!rejectReason.trim()) {
+            alert('Please provide a rejection reason');
+            return;
+        }
+        try {
+            await warrantyClaimService.rejectClaim(selectedClaim._id, rejectReason);
+            setRejectModalOpen(false);
+            setRejectReason('');
+            setSelectedClaim(null);
+            loadClaims(); // Refresh list
+        } catch (error) {
+            console.error('Failed to reject claim:', error);
+            alert('Failed to reject claim');
+        }
+    };
 
     const statusConfig = {
+        'Draft': { color: 'slate', icon: FileText, label: 'Draft' },
         'Pending': { color: 'amber', icon: Clock, label: 'Pending' },
         'Under Review': { color: 'blue', icon: Eye, label: 'Under Review' },
         'Approved': { color: 'emerald', icon: CheckCircle, label: 'Approved' },
@@ -102,9 +87,9 @@ const WarrantyClaimsList = () => {
     const filteredClaims = claims.filter(claim => {
         const matchesSearch =
             claim.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            claim.chassisNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            claim.componentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            claim.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+            (claim.chassisNumber && claim.chassisNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (claim.componentName && claim.componentName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (claim.customerName && claim.customerName.toLowerCase().includes(searchQuery.toLowerCase()));
 
         const matchesStatus = statusFilter === 'All' || claim.status === statusFilter;
 
@@ -235,7 +220,16 @@ const WarrantyClaimsList = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200">
-                            {filteredClaims.length === 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="9" className="px-6 py-12 text-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                            <p className="text-slate-500">Loading warranty claims...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredClaims.length === 0 ? (
                                 <tr>
                                     <td colSpan="9" className="px-6 py-12 text-center text-slate-500">
                                         No warranty claims found
@@ -284,25 +278,39 @@ const WarrantyClaimsList = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
                                                     <button
-                                                        onClick={() => navigate(`/warranty-claims/${claim.id}`)}
+                                                        onClick={() => navigate(`/warranty-claims/${claim._id}`)}
                                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                         title="View Details"
                                                     >
                                                         <Eye size={16} />
                                                     </button>
                                                     <button
-                                                        onClick={() => navigate(`/warranty-claims/${claim.id}/edit`)}
+                                                        onClick={() => navigate(`/warranty-claims/${claim._id}/edit`)}
                                                         className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
                                                         title="Edit"
                                                     >
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
+                                                    {claim.status === 'Draft' ? (
+                                                        <button
+                                                            onClick={() => handleDelete(claim._id)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                            title="Delete Draft"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedClaim(claim);
+                                                                setRejectModalOpen(true);
+                                                            }}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                            title="Reject Claim"
+                                                        >
+                                                            <XCircle size={16} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -313,6 +321,46 @@ const WarrantyClaimsList = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Reject Modal */}
+            {rejectModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+                        <h3 className="text-xl font-bold text-slate-900 mb-4">Reject Warranty Claim</h3>
+                        <p className="text-sm text-slate-600 mb-4">
+                            Claim: <span className="font-semibold">{selectedClaim?.id}</span>
+                        </p>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Rejection Reason *
+                        </label>
+                        <textarea
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Provide reason for rejection..."
+                            className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all outline-none resize-none"
+                            rows="4"
+                        ></textarea>
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    setRejectModalOpen(false);
+                                    setRejectReason('');
+                                    setSelectedClaim(null);
+                                }}
+                                className="flex-1 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all font-semibold"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReject}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-semibold"
+                            >
+                                Reject Claim
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

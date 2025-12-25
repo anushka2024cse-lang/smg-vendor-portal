@@ -1,31 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MoreHorizontal, MessageSquare, Search, Eye, Trash2, X, ChevronDown } from 'lucide-react';
+import { MoreHorizontal, MessageSquare, Search, Eye, Trash2, X, ChevronDown, Send } from 'lucide-react';
+import { useToast } from '../../contexts/ToastContext';
+import ticketService from '../../services/ticketService';
 
 const AdminTickets = () => {
-    // Mock data matching the screenshot exactly, now with 'message'
-    const [tickets, setTickets] = useState([
-        {
-            id: 1,
-            status: 'New',
-            subject: 'Billing Inquiry',
-            fromName: 'Virendra Singh',
-            fromEmail: 'deep_1935@yahoo.co.in',
-            date: 'Nov 26, 2025, 3:23:56 AM',
-            message: 'CLER MY PENDINGS'
-        },
-        {
-            id: 2,
-            status: 'Resolved',
-            subject: 'Billing Inquiry',
-            fromName: 'Virendra Singh',
-            fromEmail: 'deep_1935@yahoo.co.in',
-            date: 'Nov 10, 2025, 3:41:52 PM',
-            message: 'Previous billing issue regarding invoice #4022.'
-        }
-    ]);
+    const toast = useToast();
+    const [tickets, setTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTickets = async () => {
+            try {
+                const response = await ticketService.getAll();
+                setTickets(response.data || []);
+            } catch (error) {
+                console.error("Failed to fetch tickets", error);
+                toast.error("Failed to load tickets");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTickets();
+    }, []);
 
     const [activeActionId, setActiveActionId] = useState(null);
     const [viewModalTicket, setViewModalTicket] = useState(null);
+    const [replyText, setReplyText] = useState('');
     const actionMenuRef = useRef(null);
 
     // Close action menu when clicking outside
@@ -46,12 +46,19 @@ const AdminTickets = () => {
 
     const handleViewClick = (ticket) => {
         setViewModalTicket({ ...ticket });
+        setReplyText(''); // Reset reply
         setActiveActionId(null);
     };
 
-    const handleDeleteClick = (id) => {
+    const handleDeleteClick = async (id) => {
         if (window.confirm("Are you sure you want to delete this ticket?")) {
-            setTickets(tickets.filter(t => t.id !== id));
+            try {
+                await ticketService.delete(id);
+                setTickets(tickets.filter(t => t.id !== id));
+                toast.success('Ticket deleted');
+            } catch (error) {
+                toast.error('Failed to delete ticket');
+            }
         }
         setActiveActionId(null);
     };
@@ -60,9 +67,34 @@ const AdminTickets = () => {
         setViewModalTicket(prev => ({ ...prev, status: newStatus }));
     };
 
-    const handleSaveStatus = () => {
-        setTickets(tickets.map(t => t.id === viewModalTicket.id ? viewModalTicket : t));
-        setViewModalTicket(null);
+    const handleSendReply = () => {
+        if (!replyText.trim()) {
+            toast.error('Reply cannot be empty');
+            return;
+        }
+
+        // Simulate sending reply
+        toast.success(`Reply sent to ${viewModalTicket.fromEmail}`);
+
+        // Auto-update status to In Progress or Resolved if needed
+        if (viewModalTicket.status === 'New') {
+            setViewModalTicket(prev => ({ ...prev, status: 'In Progress' }));
+        }
+
+        // Clear reply text
+        setReplyText('');
+    };
+
+    const handleSaveStatus = async () => {
+        try {
+            const updatedTicket = await ticketService.update(viewModalTicket.id, { status: viewModalTicket.status });
+            // Update local list
+            setTickets(tickets.map(t => t.id === viewModalTicket.id ? { ...t, status: updatedTicket.status } : t));
+            setViewModalTicket(null);
+            toast.success('Ticket status updated');
+        } catch (error) {
+            toast.error('Failed to update ticket status');
+        }
     };
 
     return (
@@ -72,15 +104,17 @@ const AdminTickets = () => {
                     <MessageSquare className="text-blue-600" size={24} />
                 </div>
                 <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Admin Dashboard</p>
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Support Tickets</h1>
+                    <p className="text-sm text-slate-500">Manage and respond to user support requests.</p>
                 </div>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
-                <div className="p-6 border-b border-slate-200 bg-slate-50/50">
-                    <h2 className="text-lg font-bold text-slate-900 mb-1">Incoming Support Requests</h2>
-                    <p className="text-sm text-slate-500">View and manage all support tickets submitted by users.</p>
+                <div className="p-6 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-900 mb-1">Incoming Requests</h2>
+                        <p className="text-sm text-slate-500">View and manage all support tickets submitted by users.</p>
+                    </div>
                 </div>
 
                 <div className="overflow-visible">
@@ -157,29 +191,49 @@ const AdminTickets = () => {
             {/* View/Reply Modal */}
             {viewModalTicket && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-lg rounded-xl border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="bg-white w-full max-w-2xl rounded-xl border border-slate-200 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                         {/* Header */}
-                        <div className="flex items-start justify-between p-6 pb-0">
+                        <div className="flex items-start justify-between p-6 border-b border-slate-100 bg-slate-50">
                             <div>
                                 <h2 className="text-lg font-bold text-slate-900 mb-1">{viewModalTicket.subject}</h2>
-                                <p className="text-sm text-slate-500">From: {viewModalTicket.fromName} ({viewModalTicket.fromEmail})</p>
+                                <p className="text-sm text-slate-500">From: <span className="font-medium text-slate-900">{viewModalTicket.fromName}</span> ({viewModalTicket.fromEmail})</p>
                             </div>
                             <button
                                 onClick={() => setViewModalTicket(null)}
-                                className="text-slate-400 hover:text-slate-600 p-1"
+                                className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-200 transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        {/* Body */}
-                        <div className="p-6">
+                        {/* Body - Scrollable */}
+                        <div className="p-6 overflow-y-auto flex-1">
                             <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
-                                <p className="text-slate-700 text-sm font-medium">{viewModalTicket.message}</p>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">User Message</label>
+                                <p className="text-slate-700 text-sm font-medium leading-relaxed">{viewModalTicket.message}</p>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <span className="text-sm font-semibold text-slate-700">Status:</span>
+                            <div className="mb-6">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Your Reply</label>
+                                <div className="relative">
+                                    <textarea
+                                        value={replyText}
+                                        onChange={(e) => setReplyText(e.target.value)}
+                                        placeholder="Type your response here..."
+                                        className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none h-32 resize-none"
+                                    ></textarea>
+                                    <button
+                                        onClick={handleSendReply}
+                                        className="absolute bottom-3 right-3 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                                        title="Send Reply"
+                                    >
+                                        <Send size={16} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 pt-4 border-t border-slate-100">
+                                <span className="text-sm font-semibold text-slate-700">Update Status:</span>
                                 <div className="relative inline-block w-40">
                                     <select
                                         value={viewModalTicket.status}
@@ -200,15 +254,16 @@ const AdminTickets = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="mt-8 flex justify-end">
-                                <button
-                                    onClick={handleSaveStatus}
-                                    className="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-6 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                        {/* Footer */}
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                            <button
+                                onClick={handleSaveStatus}
+                                className="bg-slate-900 text-white hover:bg-slate-800 px-6 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"
+                            >
+                                Save & Close
+                            </button>
                         </div>
                     </div>
                 </div>

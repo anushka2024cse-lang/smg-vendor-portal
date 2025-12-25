@@ -133,42 +133,39 @@ const Sidebar = () => {
 
                     <NavItem icon={LayoutDashboard} label="Dashboard" path="/dashboard" />
 
-                    {/* === ADMIN PORTAL MENU === */}
-                    {currentRole === 'admin' && (
-                        <>
-                            <div className="mt-6 mb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest">System Administration</div>
-                            <CollapsibleSection icon={Users} label="User Management" id="admin">
-                                <NavItem icon={Users} label="All Users" path="/admin/users" />
-                                <NavItem icon={ShieldCheck} label="Access Roles" path="/admin/users" />
-                            </CollapsibleSection>
+                    {/* === VENDOR PORTAL MODULES === */}
+                    <div className="space-y-1 mt-2">
+                        <NavItem icon={Users} label="Vendors" path="/vendor/list" />
+                        <NavItem icon={FileText} label="Purchase Orders" path="/po/list" />
+                        <NavItem icon={CreditCard} label="Payments" path="/payments" />
+                        <NavItem icon={Package} label="Components" path="/component-details" />
+                        <NavItem icon={ClipboardList} label="SOR" path="/sor/list" />
+                        <NavItem icon={ShieldCheck} label="Warranty Claims" path="/warranty-claims" />
+                        <NavItem icon={Award} label="Certificates" path="/certificates" />
+                        <NavItem icon={Wrench} label="Spare Part Requests" path="/requests/spare-parts" />
+                        <NavItem icon={Truck} label="HSRP Requests" path="/requests/hsrp" />
+                        <NavItem icon={AlertTriangle} label="RSA Requests" path="/requests/rsa" />
+                        <NavItem icon={Factory} label="Production" path="/production" />
+                        <NavItem icon={Layers} label="Die Plan" path="/production/die-plan" />
+                        <NavItem icon={Layers} label="Store & Bins" path="/inventory" />
 
-                            <CollapsibleSection icon={Settings} label="System Config" id="admin">
-                                <NavItem icon={Settings} label="General Settings" path="/admin/settings" />
-                                <NavItem icon={MessageSquare} label="Support Tickets" path="/admin/tickets" />
-                                <NavItem icon={BarChart2} label="Audit Logs" path="/admin/settings" />
-                            </CollapsibleSection>
-                        </>
-                    )}
+                        <div className="my-2 border-t border-white/10"></div>
 
-                    {/* === VENDOR MANAGER PORTAL MENU === */}
-                    {currentRole === 'vendorManager' && (
-                        <div className="space-y-1 mt-2">
-                            <NavItem icon={Users} label="Vendors" path="/vendor/list" />
-                            <NavItem icon={FileText} label="Purchase Orders" path="/po/list" />
-                            <NavItem icon={CreditCard} label="Payments" path="/payments" />
-                            <NavItem icon={Package} label="Components" path="/component-details" />
-                            <NavItem icon={ClipboardList} label="SOR" path="/sor/list" />
-                            <NavItem icon={ShieldCheck} label="Warranty Claims" path="/warranty-claims" />
-                            <NavItem icon={Award} label="Certificates" path="/certificates" />
-                            <NavItem icon={Wrench} label="Spare Requests" path="/requests/spares" />
-                            <NavItem icon={Truck} label="HSRP Requests" path="/requests/hsrp" />
-                            <NavItem icon={AlertTriangle} label="RSA Requests" path="/requests/rsa" />
-                            <NavItem icon={Factory} label="Production" path="/production" />
-                            <NavItem icon={Layers} label="Store & Bins" path="/inventory" />
-                            <div className="my-2 border-t border-white/10"></div>
-                            <NavItem icon={Settings} label="Settings" path="/settings" />
-                        </div>
-                    )}
+                        <NavItem icon={Settings} label="Settings" path="/settings" />
+                    </div>
+
+                    {/* === ADMIN PORTAL MODULES (Moved after Settings) === */}
+                    <div className="mt-6 mb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest">System Administration</div>
+                    <CollapsibleSection icon={Users} label="User Management" id="admin-users">
+                        <NavItem icon={Users} label="All Users" path="/admin/users" />
+                        <NavItem icon={ShieldCheck} label="Access Roles" path="/admin/users" />
+                    </CollapsibleSection>
+
+                    <CollapsibleSection icon={Settings} label="System Config" id="admin-config">
+                        <NavItem icon={Settings} label="General Settings" path="/admin/settings" />
+                        <NavItem icon={MessageSquare} label="Support Tickets" path="/admin/tickets" />
+                        <NavItem icon={BarChart2} label="Audit Logs" path="/admin/settings" />
+                    </CollapsibleSection>
 
                 </div>
 

@@ -8,6 +8,7 @@ import VendorDetails from './pages/VendorDetails/VendorDetails';
 import MaterialReceive from './pages/MaterialReceive/MaterialReceive';
 import MaterialDispatch from './pages/MaterialDispatch/MaterialDispatch';
 import Production from './pages/Production/Production';
+import DiePlan from './pages/Production/DiePlan';
 import Forecasting from './pages/Forecasting/Forecasting';
 import Admin from './pages/Admin/Admin';
 import AdminUsers from './pages/Admin/AdminUsers';
@@ -18,6 +19,7 @@ import Models from './pages/Models/Models';
 import ComponentDetails from './pages/ComponentDetails/ComponentDetails';
 import VendorList from './pages/Vendor/VendorList';
 import VendorOnboarding from './pages/Vendor/VendorOnboarding';
+import VendorOnboardingReplica from './pages/Vendor/VendorOnboardingReplica';
 import PurchaseOrderList from './pages/Procurement/PurchaseOrderList';
 import PurchaseOrderCreate from './pages/Procurement/PurchaseOrderCreate';
 import SORWorkspace from './pages/Procurement/SOR/SORWorkspace';
@@ -27,6 +29,9 @@ import PurchaseOrderCreateReplica from './pages/Procurement/PurchaseOrderCreateR
 import SettingsPage from './pages/Settings/SettingsPage';
 import PaymentList from './pages/Payments/PaymentList';
 import AdminNotifications from './pages/Admin/AdminNotifications';
+import SparePartRequests from './pages/Requests/SparePartRequests';
+import HSRPRequests from './pages/Requests/HSRPRequests';
+import RSARequests from './pages/Requests/RSARequests';
 import WarrantyClaimsList from './pages/WarrantyClaims/WarrantyClaimsList';
 import WarrantyClaimForm from './pages/WarrantyClaims/WarrantyClaimForm';
 import WarrantyClaimDetails from './pages/WarrantyClaims/WarrantyClaimDetails';
@@ -59,6 +64,7 @@ function App() {
                             {/* VENDOR MODULE */}
                             <Route path="/vendor/list" element={<VendorList />} />
                             <Route path="/vendor/onboarding" element={<VendorOnboarding />} />
+                            <Route path="/vendor/onboarding-replica" element={<VendorOnboardingReplica />} />
                             <Route path="/vendor/details/:vendorId" element={<VendorDetails />} />
 
                             {/* PROCUREMENT */}
@@ -75,6 +81,7 @@ function App() {
 
                             {/* Operations */}
                             <Route path="/production" element={<Production />} />
+                            <Route path="/production/die-plan" element={<DiePlan />} />
                             <Route path="/forecasting" element={<Forecasting />} />
                             <Route path="/receive" element={<MaterialReceive />} />
                             <Route path="/dispatch" element={<MaterialDispatch />} />
@@ -86,9 +93,14 @@ function App() {
                             <Route path="/admin/tickets" element={<AdminTickets />} />
                             <Route path="/admin/notifications" element={<AdminNotifications />} />
 
+                            <Route path="/requests/spare-parts" element={<SparePartRequests />} />
+                            <Route path="/requests/hsrp" element={<HSRPRequests />} />
+                            <Route path="/requests/rsa" element={<RSARequests />} />
+
                             {/* Warranty Claims */}
                             <Route path="/warranty-claims" element={<WarrantyClaimsList />} />
                             <Route path="/warranty-claims/create" element={<WarrantyClaimForm />} />
+                            <Route path="/warranty-claims/:id/edit" element={<WarrantyClaimForm />} />
                             <Route path="/warranty-claims/:id" element={<WarrantyClaimDetails />} />
 
                             <Route path="/support" element={<Support />} />

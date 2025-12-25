@@ -133,7 +133,7 @@ let localVendors = [
 
 export const vendorService = {
     getAllVendors: async () => {
-        if (USE_MOCK) return Promise.resolve([...localVendors]); // Return copy
+        if (USE_MOCK) return Promise.resolve([...localVendors]);
         const response = await apiClient.get(ENDPOINTS.VENDORS.LIST);
         return response.data;
     },
@@ -143,7 +143,8 @@ export const vendorService = {
             const vendor = localVendors.find(v => v.id === id);
             return Promise.resolve(vendor ? { ...vendor } : null);
         }
-        // api call normally
+        const response = await apiClient.get(ENDPOINTS.VENDORS.DETAILS(id));
+        return response.data;
     },
 
     updateVendor: async (updatedVendor) => {
@@ -153,7 +154,8 @@ export const vendorService = {
             );
             return Promise.resolve(updatedVendor);
         }
-        // api call
+        const response = await apiClient.put(ENDPOINTS.VENDORS.DETAILS(updatedVendor.id), updatedVendor);
+        return response.data;
     },
 
     createVendor: async (vendorData) => {
@@ -194,7 +196,17 @@ export const vendorService = {
             ];
             return Promise.resolve(components.filter(c => c.vendorId === vendorId));
         }
-        // api call
+
+        try {
+            // Fallback since backend might not support ?vendor=ID or dedicated endpoint perfectly yet
+            // If backend endpoints for components are strict rest, check componentService logic
+            // But here just try generic list with query param
+            const response = await apiClient.get(`${ENDPOINTS.COMPONENTS.LIST}?vendor=${vendorId}`);
+            return response.data;
+        } catch (error) {
+            console.warn('Backend may not support filtering components by vendor yet.', error);
+            return [];
+        }
     },
 
     getVendorDocuments: async (vendorId) => {
@@ -209,6 +221,7 @@ export const vendorService = {
             ];
             return Promise.resolve(documents.filter(d => d.vendorId === vendorId));
         }
-        // api call
+        const response = await apiClient.get(`${ENDPOINTS.VENDORS.LIST}/${vendorId}/documents`);
+        return response.data;
     }
 };

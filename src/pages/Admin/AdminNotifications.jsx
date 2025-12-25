@@ -1,33 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Bell, Users, CheckCircle, AlertCircle, Info, AlertTriangle, FileText, CreditCard, Package, Building2, Trash2 } from 'lucide-react';
 import notificationService from '../../services/notificationService';
+import { adminService } from '../../services/adminService';
 import { useToast } from '../../contexts/ToastContext';
 
 const AdminNotifications = () => {
     const toast = useToast();
     const [loading, setLoading] = useState(false);
     const [recentNotifications, setRecentNotifications] = useState([]);
+    const [users, setUsers] = useState([]);
 
     const [formData, setFormData] = useState({
-        recipient: 'temp-user-id',
+        recipient: 'all',
         type: 'info',
         title: '',
         message: '',
         link: ''
     });
 
-    // Fetch recent notifications
-    const fetchRecentNotifications = async () => {
+    // Fetch data
+    const fetchInitialData = async () => {
         try {
-            const response = await notificationService.getAll({ limit: 10 });
-            setRecentNotifications(response.data || []);
+            const [notifsRes, usersRes] = await Promise.all([
+                notificationService.getAll({ limit: 10 }),
+                adminService.getAllUsers()
+            ]);
+            setRecentNotifications(notifsRes.data || []);
+            setUsers(usersRes || []);
         } catch (error) {
-            console.error('Failed to fetch notifications:', error);
+            console.error('Failed to fetch data:', error);
+            toast.error('Failed to load initial data');
         }
     };
 
     useEffect(() => {
-        fetchRecentNotifications();
+        fetchInitialData();
     }, []);
 
     const handleInputChange = (e) => {
@@ -266,15 +273,26 @@ const AdminNotifications = () => {
                                 )}
                             </div>
 
-                            {/* Recipient (will be dynamic with user selection later) */}
+                            {/* Recipient Selection */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">
                                     Recipient
                                 </label>
-                                <div className="px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm text-slate-600">
-                                    All Users (temp-user-id)
-                                </div>
-                                <p className="text-xs text-slate-500 mt-1">User selection will be available when authentication is implemented</p>
+                                <select
+                                    name="recipient"
+                                    value={formData.recipient}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                                >
+                                    <option value="all">All Users</option>
+                                    <option disabled>──────────</option>
+                                    {users.map(user => (
+                                        <option key={user.id || user._id} value={user.id || user._id}>
+                                            {user.name} ({user.email})
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-slate-500 mt-1">Select 'All Users' to broadcast or pick a specific user.</p>
                             </div>
 
                             {/* Submit Button */}

@@ -36,20 +36,37 @@ const VendorDetails = () => {
         const fetchVendor = async () => {
             try {
                 if (vendorId) {
-                    const [data, historyData, docsData] = await Promise.all([
-                        vendorService.getVendorById(vendorId),
-                        vendorService.getVendorHistory(vendorId),
-                        vendorService.getVendorDocuments(vendorId)
-                    ]);
-
-                    if (data) {
-                        setVendorData(data);
+                    // Fetch Vendor Details first (Critical)
+                    try {
+                        const data = await vendorService.getVendorById(vendorId);
+                        if (data) {
+                            setVendorData(data);
+                        } else {
+                            throw new Error('Vendor data is null');
+                        }
+                    } catch (err) {
+                        console.error("Failed to load vendor core details", err);
+                        // If core details fail, we can't show much, so let it allow 'Vendor not found' state
+                        return;
                     }
-                    setHistory(historyData || []);
-                    setDocuments(docsData || []);
+
+                    // Fetch secondary data independently
+                    try {
+                        const historyData = await vendorService.getVendorHistory(vendorId);
+                        setHistory(historyData || []);
+                    } catch (err) {
+                        console.warn("Failed to load vendor history", err);
+                    }
+
+                    try {
+                        const docsData = await vendorService.getVendorDocuments(vendorId);
+                        setDocuments(docsData || []);
+                    } catch (err) {
+                        console.warn("Failed to load vendor documents", err);
+                    }
                 }
             } catch (error) {
-                console.error("Failed to load vendor details", error);
+                console.error("Critical failure in vendor details load", error);
             } finally {
                 setLoading(false);
             }

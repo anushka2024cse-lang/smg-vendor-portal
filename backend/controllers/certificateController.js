@@ -1,5 +1,5 @@
 const Certificate = require('../models/Certificate');
-const logger = require('../utils/logger');
+const logger = require('../config/logger');
 
 // @desc    Get all certificates
 // @route   GET /api/v1/certificates
