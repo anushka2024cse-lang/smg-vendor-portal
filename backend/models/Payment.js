@@ -130,8 +130,8 @@ paymentSchema.pre('save', async function (next) {
 // Performance indexes
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ vendor: 1, status: 1 });
-paymentSchema.index({ paymentNumber: 1 });
-paymentSchema.index({ invoiceNumber: 1 });
+// paymentNumber index already created by unique: true
+// invoiceNumber index already created by index: true
 paymentSchema.index({ paymentDate: -1 });
 
 module.exports = mongoose.model('Payment', paymentSchema);

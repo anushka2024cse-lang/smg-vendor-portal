@@ -57,7 +57,7 @@ certificateSchema.pre('save', async function (next) {
 });
 
 // Indexes
-certificateSchema.index({ certificateNumber: 1 });
+// certificateNumber index already created by unique: true
 certificateSchema.index({ vendor: 1 });
 certificateSchema.index({ expiryDate: 1 });
 certificateSchema.index({ type: 1 });

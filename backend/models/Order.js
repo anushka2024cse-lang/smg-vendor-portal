@@ -88,7 +88,7 @@ orderSchema.pre('save', async function (next) {
 // Index for faster queries
 orderSchema.index({ status: 1, orderDate: -1 });
 orderSchema.index({ vendor: 1, orderDate: -1 });
-orderSchema.index({ orderNumber: 1 });
+// orderNumber index already created by unique: true
 orderSchema.index({ paymentStatus: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);
