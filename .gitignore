@@ -147,3 +147,6 @@ implementation_plan.md*
 docs/tomorrow_tasks.md
 docs/*_FIXES.md
 
+# Temporary documentation (generated during development)
+docs/temp/
+
