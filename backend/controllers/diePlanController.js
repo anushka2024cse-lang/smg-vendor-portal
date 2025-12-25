@@ -46,8 +46,7 @@ exports.createPlan = async (req, res) => {
             partName: req.body.partName,
             stage: req.body.stage,
             startDate: req.body.startDate,
-            targetDate: req.body.targetDate,
-            progress: req.body.stage === 'Design' ? 10 : req.body.stage === 'Production' ? 100 : 50
+            targetDate: req.body.targetDate
         });
 
         const savedPlan = await newPlan.save();
@@ -95,6 +94,7 @@ exports.getPlan = async (req, res) => {
 // Update plan
 exports.updatePlan = async (req, res) => {
     try {
+        // Progress is now a virtual field, no need to calculate
         const plan = await DiePlan.findByIdAndUpdate(
             req.params.id,
             req.body,

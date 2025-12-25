@@ -43,7 +43,11 @@ app.set('io', io);
 app.use(express.json());
 app.use(cors({
     origin: [
+        'http://localhost:5173',  // Vite default port
         'http://localhost:5174',
+        'http://localhost:5175',
+        'http://localhost:5176',
+        'http://localhost:5177',
         'https://demo1smg.netlify.app',
         'https://demo-smg-vendor.netlify.app'
     ],
@@ -99,16 +103,16 @@ app.use('/api/v1/inventory', require('./routes/inventory'));
 app.use('/api/v1/vendors', require('./routes/vendor'));
 app.use('/api/v1/purchase-orders', require('./routes/purchaseOrder'));
 app.use('/api/v1/components', require('./routes/components'));
-// app.use('/api/tickets', require('./routes/ticketRoutes')); // TODO: Create this file
-// app.use('/api/notifications', require('./routes/notificationRoutes')); // TODO: Create this file
-app.use('/api/spare-parts', require('./routes/sparePartRoutes'));
-app.use('/api/hsrp', require('./routes/hsrpRoutes'));
-app.use('/api/rsa', require('./routes/rsaRoutes'));
-app.use('/api/die-plans', require('./routes/diePlanRoutes'));
+app.use('/api/v1/spare-parts', require('./routes/sparePartRoutes'));
+app.use('/api/v1/hsrp', require('./routes/hsrpRoutes'));
+app.use('/api/v1/rsa', require('./routes/rsaRoutes'));
+app.use('/api/v1/die-plans', require('./routes/diePlanRoutes'));
 app.use('/api/v1/warranty', require('./routes/warranty'));
 app.use('/api/v1/orders', require('./routes/order'));
 app.use('/api/v1/payments', require('./routes/payment'));
 app.use('/api/v1/certificates', require('./routes/certificate'));
+app.use('/api/v1/sor', require('./routes/sor'));
+app.use('/api/v1/notifications', require('./routes/notification'));
 app.use('/api/v1/admin', require('./routes/admin'));
 
 // Error Handling Middleware (must be last)

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const DiePlanSchema = new mongoose.Schema({
     planId: {
         type: String,
-        required: true,
+        required: false,  // Auto-generated in controller
         unique: true
     },
     partName: {
@@ -23,12 +23,6 @@ const DiePlanSchema = new mongoose.Schema({
         enum: ['Design', 'Raw Material', 'Machining', 'Assembly', 'Trials T0', 'Trials T1', 'PPAP', 'Production'],
         default: 'Design'
     },
-    progress: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100
-    },
     startDate: {
         type: Date
     },
@@ -44,6 +38,24 @@ const DiePlanSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
+}, {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+// Virtual field: Calculate progress from stage dynamically
+DiePlanSchema.virtual('progress').get(function () {
+    const stageProgressMap = {
+        'Design': 10,
+        'Raw Material': 20,
+        'Machining': 35,
+        'Assembly': 50,
+        'Trials T0': 65,
+        'Trials T1': 80,
+        'PPAP': 90,
+        'Production': 100
+    };
+    return stageProgressMap[this.stage] || 10;
 });
 
 module.exports = mongoose.model('DiePlan', DiePlanSchema);

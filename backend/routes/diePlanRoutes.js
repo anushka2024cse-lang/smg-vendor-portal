@@ -7,6 +7,7 @@ router.get('/', diePlanController.getAllPlans);
 router.get('/:id', diePlanController.getPlan);
 router.post('/', diePlanController.createPlan);
 router.patch('/:id', diePlanController.updatePlan);
+router.put('/:id', diePlanController.updatePlan);  // Support both PATCH and PUT
 router.delete('/:id', diePlanController.deletePlan);
 
 module.exports = router;

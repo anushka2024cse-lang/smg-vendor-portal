@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { diePlanService } from '../../services/diePlanService';
 import Pagination from '../../components/Pagination';
+import EditDiePlanModal from '../../components/EditDiePlanModal';
 
 const DiePlan = () => {
     const [stats, setStats] = useState({ total: 0, inDevelopment: 0, completed: 0, delayed: 0 });
@@ -106,24 +107,9 @@ const DiePlan = () => {
         }
     };
 
-    const handleEditSubmit = async () => {
-        try {
-            // Map frontend field names to backend schema
-            const updateData = {
-                vendorName: formData.vendor,
-                partName: formData.partName,
-                stage: formData.stage,
-                startDate: formData.startDate,
-                targetDate: formData.targetDate
-            };
-            await diePlanService.updatePlan(selectedPlan._id, updateData);
-            setIsEditModalOpen(false);
-            setFormData({ vendor: '', partName: '', stage: 'Design', startDate: '', targetDate: '' });
-            setSelectedPlan(null);
-            loadData();
-        } catch (error) {
-            alert('Failed to update die plan');
-        }
+    const handleEditSuccess = () => {
+        loadData();
+        setSelectedPlan(null);
     };
 
     const handleDelete = async (plan) => {
@@ -139,13 +125,6 @@ const DiePlan = () => {
 
     const openEditModal = (plan) => {
         setSelectedPlan(plan);
-        setFormData({
-            vendor: plan.vendor,
-            partName: plan.partName,
-            stage: plan.stage,
-            startDate: plan.startDate || '',
-            targetDate: plan.targetDate || ''
-        });
         setIsEditModalOpen(true);
     };
 
@@ -302,7 +281,7 @@ const DiePlan = () => {
                                                 <button onClick={() => { setIsDetailsModalOpen(true); }} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-md">
                                                     View Details
                                                 </button>
-                                                <button onClick={() => { openEditModal(plan); setSelectedPlan(null); }} className="w-full text-left px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md">
+                                                <button onClick={() => openEditModal(plan)} className="w-full text-left px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md">
                                                     Edit
                                                 </button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleDelete(plan); setSelectedPlan(null); }} className="w-full text-left px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md">
@@ -428,77 +407,13 @@ const DiePlan = () => {
                 </div>
             )}
 
-            {/* Edit Modal */}
-            {isEditModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-900">Edit Die Development Plan</h2>
-                            <button
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Vendor</label>
-                                <select
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    value={formData.vendor}
-                                    onChange={e => setFormData({ ...formData, vendor: e.target.value })}
-                                >
-                                    <option value="">Select Vendor</option>
-                                    <option value="Meenakshi Polymers">Meenakshi Polymers</option>
-                                    <option value="NeoSky India">NeoSky India</option>
-                                    <option value="Alpha Tech">Alpha Tech</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Part Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    placeholder="e.g. Rear Fender Casing"
-                                    value={formData.partName}
-                                    onChange={e => setFormData({ ...formData, partName: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Current Stage</label>
-                                <select
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    value={formData.stage}
-                                    onChange={e => setFormData({ ...formData, stage: e.target.value })}
-                                >
-                                    {stages.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Start Date</label>
-                                    <input
-                                        type="date"
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                        value={formData.startDate}
-                                        onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Target Date</label>
-                                    <input type="date" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm" value={formData.targetDate} onChange={e => setFormData({ ...formData, targetDate: e.target.value })} />
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                            <button onClick={() => { setIsEditModalOpen(false); setFormData({ vendor: '', partName: '', stage: 'Design', startDate: '', targetDate: '' }); }} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
-                            <button onClick={handleEditSubmit} className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"><Save size={18} />Update Plan</button>
-                        </div>
-                    </div>
-                </div >
-            )}
+            {/* Edit Modal - New Dedicated Component */}
+            <EditDiePlanModal
+                isOpen={isEditModalOpen}
+                onClose={() => { setIsEditModalOpen(false); setSelectedPlan(null); }}
+                plan={selectedPlan}
+                onSuccess={handleEditSuccess}
+            />
 
             {/* Details Modal */}
             {
