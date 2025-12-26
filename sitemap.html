@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMG Vendor Portal - Sitemap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #60a5fa;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .district {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid;
+        }
+
+        .district-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .block {
+            background: #1a1a1a;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .block:hover {
+            background: #333;
+            transform: translateX(4px);
+        }
+
+        .block-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .block-route {
+            font-size: 11px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+            margin-top: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Colors */
+        .vendor {
+            border-color: #10b981;
+        }
+
+        .vendor .district-title {
+            color: #10b981;
+        }
+
+        .vendor .block:hover {
+            border-left-color: #10b981;
+        }
+
+        .financial {
+            border-color: #3b82f6;
+        }
+
+        .financial .district-title {
+            color: #3b82f6;
+        }
+
+        .financial .block:hover {
+            border-left-color: #3b82f6;
+        }
+
+        .operations {
+            border-color: #8b5cf6;
+        }
+
+        .operations .district-title {
+            color: #8b5cf6;
+        }
+
+        .operations .block:hover {
+            border-left-color: #8b5cf6;
+        }
+
+        .inventory {
+            border-color: #14b8a6;
+        }
+
+        .inventory .district-title {
+            color: #14b8a6;
+        }
+
+        .inventory .block:hover {
+            border-left-color: #14b8a6;
+        }
+
+        .support {
+            border-color: #f59e0b;
+        }
+
+        .support .district-title {
+            color: #f59e0b;
+        }
+
+        .support .block:hover {
+            border-left-color: #f59e0b;
+        }
+
+        .dashboard {
+            border-color: #6366f1;
+        }
+
+        .dashboard .district-title {
+            color: #6366f1;
+        }
+
+        .dashboard .block:hover {
+            border-left-color: #6366f1;
+        }
+
+        .admin {
+            border-color: #ef4444;
+        }
+
+        .admin .district-title {
+            color: #ef4444;
+        }
+
+        .admin .block:hover {
+            border-left-color: #ef4444;
+        }
+
+        .auth {
+            border-color: #ec4899;
+        }
+
+        .auth .district-title {
+            color: #ec4899;
+        }
+
+        .auth .block:hover {
+            border-left-color: #ec4899;
+        }
+
+        .badge-new {
+            background: #10b981;
+        }
+
+        .badge-hot {
+            background: #f59e0b;
+        }
+
+        .badge-core {
+            background: #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🗺️ SMG Vendor Portal - Sitemap</h1>
+
+        <div class="grid">
+
+            <!-- Authentication -->
+            <div class="district auth">
+                <div class="district-title">🔐 Authentication</div>
+                <div class="block" onclick="navigate('/login')">
+                    <div class="block-name">Login <span class="badge badge-core">CORE</span></div>
+                    <div class="block-route">/login</div>
+                </div>
+                <div class="block" onclick="navigate('/register')">
+                    <div class="block-name">Register</div>
+                    <div class="block-route">/register</div>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="district dashboard">
+                <div class="district-title">📊 Dashboard</div>
+                <div class="block" onclick="navigate('/dashboard')">
+                    <div class="block-name">Overview <span class="badge badge-core">CORE</span></div>
+                    <div class="block-route">/dashboard</div>
+                </div>
+                <div class="block" onclick="navigate('/dashboard/analytics')">
+                    <div class="block-name">Analytics</div>
+                    <div class="block-route">/dashboard/analytics</div>
+                </div>
+                <div class="block" onclick="navigate('/dashboard/reports')">
+                    <div class="block-name">Reports</div>
+                    <div class="block-route">/dashboard/reports</div>
+                </div>
+                <div class="block" onclick="navigate('/notifications')">
+                    <div class="block-name">Notifications</div>
+                    <div class="block-route">/notifications</div>
+                </div>
+            </div>
+
+            <!-- Vendor Management -->
+            <div class="district vendor">
+                <div class="district-title">🏢 Vendor Management</div>
+                <div class="block" onclick="navigate('/vendor/onboarding')">
+                    <div class="block-name">Onboarding <span class="badge badge-new">NEW</span></div>
+                    <div class="block-route">/vendor/onboarding</div>
+                </div>
+                <div class="block" onclick="navigate('/vendor/list')">
+                    <div class="block-name">Vendor List</div>
+                    <div class="block-route">/vendor/list</div>
+                </div>
+                <div class="block" onclick="navigate('/vendor/:id')">
+                    <div class="block-name">Vendor Details</div>
+                    <div class="block-route">/vendor/:id</div>
+                </div>
+                <div class="block" onclick="navigate('/vendor-portal')">
+                    <div class="block-name">Vendor Portal</div>
+                    <div class="block-route">/vendor-portal</div>
+                </div>
+            </div>
+
+            <!-- Financial -->
+            <div class="district financial">
+                <div class="district-title">💰 Financial</div>
+                <div class="block" onclick="navigate('/payments')">
+                    <div class="block-name">Payments <span class="badge badge-hot">HOT</span></div>
+                    <div class="block-route">/payments</div>
+                </div>
+                <div class="block" onclick="navigate('/payments/create')">
+                    <div class="block-name">Create Payment <span class="badge badge-new">NEW</span></div>
+                    <div class="block-route">/payments/create</div>
+                </div>
+                <div class="block" onclick="navigate('/purchase-orders')">
+                    <div class="block-name">Purchase Orders</div>
+                    <div class="block-route">/purchase-orders</div>
+                </div>
+                <div class="block" onclick="navigate('/orders')">
+                    <div class="block-name">Orders</div>
+                    <div class="block-route">/orders</div>
+                </div>
+            </div>
+
+            <!-- Operations -->
+            <div class="district operations">
+                <div class="district-title">⚙️ Operations</div>
+                <div class="block" onclick="navigate('/spare-parts')">
+                    <div class="block-name">Spare Parts</div>
+                    <div class="block-route">/spare-parts</div>
+                </div>
+                <div class="block" onclick="navigate('/hsrp')">
+                    <div class="block-name">HSRP Requests</div>
+                    <div class="block-route">/hsrp</div>
+                </div>
+                <div class="block" onclick="navigate('/rsa')">
+                    <div class="block-name">RSA Requests</div>
+                    <div class="block-route">/rsa</div>
+                </div>
+                <div class="block" onclick="navigate('/die-plan')">
+                    <div class="block-name">Die Plan</div>
+                    <div class="block-route">/die-plan</div>
+                </div>
+                <div class="block" onclick="navigate('/production')">
+                    <div class="block-name">Production</div>
+                    <div class="block-route">/production</div>
+                </div>
+            </div>
+
+            <!-- Inventory -->
+            <div class="district inventory">
+                <div class="district-title">📦 Inventory</div>
+                <div class="block" onclick="navigate('/inventory')">
+                    <div class="block-name">Stock Levels</div>
+                    <div class="block-route">/inventory</div>
+                </div>
+                <div class="block" onclick="navigate('/sor')">
+                    <div class="block-name">SOR Management</div>
+                    <div class="block-route">/sor</div>
+                </div>
+                <div class="block" onclick="navigate('/forecasting')">
+                    <div class="block-name">Forecasting</div>
+                    <div class="block-route">/forecasting</div>
+                </div>
+                <div class="block" onclick="navigate('/material-dispatch')">
+                    <div class="block-name">Material Dispatch</div>
+                    <div class="block-route">/material-dispatch</div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="district support">
+                <div class="district-title">🎫 Support</div>
+                <div class="block" onclick="navigate('/support')">
+                    <div class="block-name">Tickets</div>
+                    <div class="block-route">/support</div>
+                </div>
+                <div class="block" onclick="navigate('/warranty-claims')">
+                    <div class="block-name">Warranty Claims <span class="badge badge-new">NEW</span></div>
+                    <div class="block-route">/warranty-claims</div>
+                </div>
+                <div class="block" onclick="navigate('/certificates')">
+                    <div class="block-name">Certificates</div>
+                    <div class="block-route">/certificates</div>
+                </div>
+                <div class="block" onclick="navigate('/failed-parts')">
+                    <div class="block-name">Failed Parts</div>
+                    <div class="block-route">/failed-parts</div>
+                </div>
+            </div>
+
+            <!-- Administration -->
+            <div class="district admin">
+                <div class="district-title">👑 Administration</div>
+                <div class="block" onclick="navigate('/admin')">
+                    <div class="block-name">Admin Panel</div>
+                    <div class="block-route">/admin</div>
+                </div>
+                <div class="block" onclick="navigate('/admin/users')">
+                    <div class="block-name">User Management</div>
+                    <div class="block-route">/admin/users</div>
+                </div>
+                <div class="block" onclick="navigate('/admin/roles')">
+                    <div class="block-name">Roles & Permissions</div>
+                    <div class="block-route">/admin/roles</div>
+                </div>
+                <div class="block" onclick="navigate('/settings')">
+                    <div class="block-name">Settings</div>
+                    <div class="block-route">/settings</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function navigate(route) {
+            console.log('Navigate to:', route);
+            // window.location.href = route;
+        }
+    </script>
+</body>
+
+</html>

@@ -35,20 +35,33 @@ exports.getAllClaims = async (req, res) => {
 // @access  Public
 exports.getClaim = async (req, res) => {
     try {
+        console.log('\n=== GET WARRANTY CLAIM ===');
+        console.log('Requested ID:', req.params.id);
+
         const claim = await Warranty.findById(req.params.id);
 
         if (!claim) {
+            console.log('❌ Claim not found');
+            console.log('=== END GET WARRANTY CLAIM ===\n');
             return res.status(404).json({
                 success: false,
                 error: 'Warranty claim not found'
             });
         }
 
+        console.log('✅ Claim found!');
+        console.log('Claim Number:', claim.claimNumber);
+        console.log('Work Order:', claim.workOrderNumber);
+        console.log('Defect Code:', claim.defectCode);
+        console.log('=== END GET WARRANTY CLAIM ===\n');
+
         res.status(200).json({
             success: true,
             data: claim
         });
     } catch (err) {
+        console.log('❌ ERROR:', err.message);
+        console.log('=== END GET WARRANTY CLAIM (ERROR) ===\n');
         res.status(500).json({ success: false, error: err.message });
     }
 };
@@ -98,6 +111,12 @@ exports.createClaim = async (req, res) => {
 // @access  Public
 exports.updateClaim = async (req, res) => {
     try {
+        console.log('\n=== UPDATE WARRANTY CLAIM ===');
+        console.log('Claim ID:', req.params.id);
+        console.log('Update data keys:', Object.keys(req.body));
+        console.log('workOrderNumber in request:', req.body.workOrderNumber);
+        console.log('defectCode in request:', req.body.defectCode);
+
         const claim = await Warranty.findByIdAndUpdate(
             req.params.id,
             req.body,
@@ -105,11 +124,18 @@ exports.updateClaim = async (req, res) => {
         );
 
         if (!claim) {
+            console.log('❌ Claim not found');
+            console.log('=== END UPDATE WARRANTY CLAIM ===\n');
             return res.status(404).json({
                 success: false,
                 error: 'Warranty claim not found'
             });
         }
+
+        console.log('✅ Claim updated!');
+        console.log('Updated workOrderNumber:', claim.workOrderNumber);
+        console.log('Updated defectCode:', claim.defectCode);
+        console.log('=== END UPDATE WARRANTY CLAIM ===\n');
 
         res.status(200).json({
             success: true,
@@ -117,6 +143,8 @@ exports.updateClaim = async (req, res) => {
             data: claim
         });
     } catch (err) {
+        console.log('❌ ERROR:', err.message);
+        console.log('=== END UPDATE WARRANTY CLAIM (ERROR) ===\n');
         res.status(400).json({ success: false, error: err.message });
     }
 };

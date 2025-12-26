@@ -33,14 +33,25 @@ const LoginPage = () => {
         }
     };
 
-    const handleAdminLogin = (e) => {
+    const handleAdminLogin = async (e) => {
         e.preventDefault();
-        if (adminKey === 'smg9936879105mmp') {
-            localStorage.setItem('role', 'Super Admin');
-            localStorage.setItem('token', 'mock-admin-token');
+        if (!adminKey) {
+            setError('Please enter the admin key.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError('');
+
+            // Call backend API for admin authentication
+            const response = await authService.adminLogin(adminKey);
             navigate('/dashboard');
-        } else {
+        } catch (err) {
+            console.error(err);
             setError('Access Denied. Invalid Sentinel Key.');
+        } finally {
+            setLoading(false);
         }
     };
 

@@ -22,7 +22,7 @@ const WarrantyClaimsList = () => {
         try {
             const response = await warrantyClaimService.getAllClaims();
             const claimsData = response.data.data.map(claim => ({
-                id: claim.claimNumber || claim._id,
+                id: claim.workOrderNumber || claim._id,  // Use workOrderNumber as Claim ID
                 _id: claim._id,
                 claimDate: claim.createdAt || claim.submittedDate,
                 vehicleModel: claim.vehicleModel,

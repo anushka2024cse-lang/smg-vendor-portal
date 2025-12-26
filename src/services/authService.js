@@ -78,6 +78,25 @@ export const authService = {
         }
     },
 
+    adminLogin: async (adminKey) => {
+        try {
+            const response = await apiClient.post('/v1/auth/admin-login', { adminKey });
+            const { token, role } = response.data;
+
+            if (token) {
+                localStorage.setItem('token', token);
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('role', role);
+                localStorage.setItem('user', JSON.stringify({ role, name: 'Admin' }));
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('❌ Admin login error:', error.response?.data || error.message);
+            throw error;
+        }
+    },
+
     getToken: () => {
         return localStorage.getItem('token') || localStorage.getItem('authToken');
     }

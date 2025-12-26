@@ -1,72 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Package, User, Building2, MapPin, Phone, Mail, FileText, AlertCircle, CheckCircle, Clock, XCircle, Download, Edit } from 'lucide-react';
+import warrantyClaimService from '../../services/warrantyClaimService';
+import { useToast } from '../../contexts/ToastContext';
 
 const WarrantyClaimDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const toast = useToast();
+    const [claim, setClaim] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data - would be fetched from API
-    const claim = {
-        id: id || 'WC-2024-001',
-        claimDate: '2024-12-15',
-        claimType: 'Component Failure',
-        workOrderNumber: 'WO-2024-1234',
-        defectCode: 'DEF-BAT-001',
+    useEffect(() => {
+        loadClaimData();
+    }, [id]);
 
-        // Vehicle Information
-        vehicleModel: 'E-Scooter X1',
-        chassisNumber: 'CH12345678',
-        engineNumber: 'EN87654321',
-        registrationNumber: 'DL01AB1234',
-        manufacturingDate: '2024-01-15',
-        purchaseDate: '2024-02-10',
-        currentMileage: '5420',
-
-        // Component Details
-        componentName: 'Battery Pack',
-        partNumber: 'BP-48V-30AH',
-        serialNumber: 'SN-BAT-9876543',
-        failureDate: '2024-12-10',
-        failureType: 'Manufacturing Defect',
-        failureDescription: 'Battery pack showing sudden voltage drop after 5000km usage. Customer reported complete shutdown during regular use. Diagnostics reveal cell imbalance and premature degradation of battery cells, likely due to manufacturing defect in cell quality control.',
-
-        // Customer Information
-        customerName: 'Rajesh Kumar',
-        customerPhone: '+91 98765 43210',
-        customerEmail: 'rajesh.kumar@example.com',
-        customerAddress: '123, Green Park, New Delhi - 110016',
-
-        // Dealer Information
-        dealerName: 'Delhi Motors',
-        dealerCode: 'DLR-DL-001',
-        dealerLocation: 'Delhi, India',
-        serviceAdvisorName: 'Amit Sharma',
-        serviceAdvisorPhone: '+91 98123 45678',
-
-        // Cost Details
-        laborHours: '2.5',
-        laborCost: '₹1,500',
-        partsCost: '₹23,500',
-        totalClaimAmount: '₹25,000',
-
-        // Status & Dates
-        status: 'Pending',
-        submittedDate: '2024-12-15',
-        reviewedDate: null,
-        approvedDate: null,
-        pickupScheduled: '2024-12-20',
-        warrantyStatus: 'In Warranty',
-
-        // Additional
-        remarks: 'Customer has maintained regular service records. Vehicle usage is within normal parameters.',
-        attachments: [
-            { name: 'Failed Part Photo 1.jpg', size: '2.4 MB' },
-            { name: 'Failed Part Photo 2.jpg', size: '1.8 MB' },
-            { name: 'Warranty Card.pdf', size: '456 KB' },
-            { name: 'Diagnostic Report.pdf', size: '890 KB' }
-        ]
+    const loadClaimData = async () => {
+        try {
+            const response = await warrantyClaimService.getClaim(id);
+            setClaim(response.data.data);
+        } catch (error) {
+            console.error('Error loading claim:', error);
+            toast.error('Failed to load warranty claim details');
+        } finally {
+            setLoading(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="p-8 max-w-7xl mx-auto flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-slate-600">Loading warranty claim details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!claim) {
+        return (
+            <div className="p-8 max-w-7xl mx-auto">
+                <div className="text-center">
+                    <p className="text-slate-600">Warranty claim not found.</p>
+                    <button onClick={() => navigate('/warranty-claims')} className="mt-4 text-blue-600 hover:text-blue-700">
+                        Back to Claims
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const statusConfig = {
         'Pending': { color: 'amber', icon: Clock, label: 'Pending Review' },
@@ -76,8 +59,8 @@ const WarrantyClaimDetails = () => {
         'Pending Pickup': { color: 'purple', icon: AlertCircle, label: 'Pending Pickup' }
     };
 
-    const StatusIcon = statusConfig[claim.status].icon;
-    const statusColor = statusConfig[claim.status].color;
+    const StatusIcon = statusConfig[claim.status]?.icon || Clock;
+    const statusColor = statusConfig[claim.status]?.color || 'slate';
 
     return (
         <div className="p-8 max-w-7xl mx-auto">
@@ -228,6 +211,162 @@ const WarrantyClaimDetails = () => {
                             </p>
                         </div>
                     </div>
+
+                    {/* Technical Details */}
+                    {claim.technicalDetails && Object.keys(claim.technicalDetails).length > 0 && (
+                        <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-lg shadow-slate-200/50 p-6">
+                            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <span className="text-green-600 text-xl">⚙</span>
+                                Component Technical Details
+                            </h2>
+                            <div className="space-y-4">
+                                {/* Charger Lithium */}
+                                {claim.technicalDetails.chargerLithium && Object.values(claim.technicalDetails.chargerLithium).some(v => v) && (
+                                    <div className="border-l-4 border-green-600 pl-4">
+                                        <h3 className="text-sm font-bold text-slate-900 mb-3">
+                                            Charger Complaint (Lithium)
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {claim.technicalDetails.chargerLithium.chargerNo && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Charger No</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.chargerLithium.chargerNo}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.chargerLithium.batteryVoltage && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Battery Voltage</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.chargerLithium.batteryVoltage}V</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.chargerLithium.greenLedStatus && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Green LED Status</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.chargerLithium.greenLedStatus}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.chargerLithium.fanStatus && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Fan Status</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.chargerLithium.fanStatus}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.chargerLithium.chargingTime && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Charging Time</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.chargerLithium.chargingTime}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Battery Lithium */}
+                                {claim.technicalDetails.batteryLithium && Object.values(claim.technicalDetails.batteryLithium).some(v => v) && (
+                                    <div className="border-l-4 border-green-600 pl-4">
+                                        <h3 className="text-sm font-bold text-slate-900 mb-3">
+                                            Battery Complaint (Lithium)
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {claim.technicalDetails.batteryLithium.batteryNo && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Battery No</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.batteryLithium.batteryNo}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.batteryLithium.voltageFullCharge && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Voltage @Full Charge</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.batteryLithium.voltageFullCharge}V</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.batteryLithium.vehicleCurrent && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Vehicle Current</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.batteryLithium.vehicleCurrent}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Motor */}
+                                {claim.technicalDetails.motor && Object.values(claim.technicalDetails.motor).some(v => v) && (
+                                    <div className="border-l-4 border-green-600 pl-4">
+                                        <h3 className="text-sm font-bold text-slate-900 mb-3">
+                                            Motor Complaint
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {claim.technicalDetails.motor.motorNo && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Motor No</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.motor.motorNo}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.motor.vehicleCurrent && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Vehicle Current</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.motor.vehicleCurrent}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Controller */}
+                                {claim.technicalDetails.controller && Object.values(claim.technicalDetails.controller).some(v => v) && (
+                                    <div className="border-l-4 border-green-600 pl-4">
+                                        <h3 className="text-sm font-bold text-slate-900 mb-3">
+                                            Controller Complaint
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {claim.technicalDetails.controller.controllerNo && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Controller No</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.controller.controllerNo}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.controller.vehicleCurrent && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Vehicle Current</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.controller.vehicleCurrent}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Converter */}
+                                {claim.technicalDetails.converter && Object.values(claim.technicalDetails.converter).some(v => v) && (
+                                    <div className="border-l-4 border-green-600 pl-4">
+                                        <h3 className="text-sm font-bold text-slate-900 mb-3">
+                                            Converter Complaint
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {claim.technicalDetails.converter.converterNo && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Converter No</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.converter.converterNo}</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.converter.inputVoltage && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Input Voltage</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.converter.inputVoltage}V</p>
+                                                </div>
+                                            )}
+                                            {claim.technicalDetails.converter.outputVoltage && (
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Output Voltage</p>
+                                                    <p className="text-sm text-slate-900">{claim.technicalDetails.converter.outputVoltage}V</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Attachments */}
                     <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-lg shadow-slate-200/50 p-6">

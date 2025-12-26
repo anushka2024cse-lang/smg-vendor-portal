@@ -17,7 +17,8 @@ const warrantySchema = new mongoose.Schema({
     // Vehicle Information
     vehicleModel: String,
     chassisNumber: String,
-    engineNumber: String,
+    motorNumber: String,  // EV company - Motor instead of Engine
+    batteryNumber: String,  // EV battery identification
     registrationNumber: String,
     manufacturingDate: Date,
     purchaseDate: Date,
@@ -87,6 +88,114 @@ const warrantySchema = new mongoose.Schema({
     remarks: String,
     attachments: [String],
 
+    // Component Technical Details
+    technicalDetails: {
+        // Charger Complaint (Lithium)
+        chargerLithium: {
+            chargerNo: String,
+            batteryVoltage: Number,
+            greenLedStatus: String,
+            redLedPhylinStatus: String,
+            mainsOnLedStatus: String,
+            opOnLedStatus: String,
+            batteryChargingLedStatus: String,
+            fanStatus: String,
+            chargingTime: String
+        },
+
+        // Charger Complaint (Lead Acid)
+        chargerLeadAcid: {
+            chargerNo: String,
+            batteryVoltage: Number,
+            greenLedStatus: String,
+            redLedStatus: String,
+            blueLedStatus: String,
+            fanStatus: String,
+            chargingTime: String
+        },
+
+        // Battery Complaint (Lithium)
+        batteryLithium: {
+            batteryNo: String,
+            vehicleCurrent: String,
+            condition: String,
+            value: String,
+            voltageFullCharge: Number,
+            voltageAfterLowBattery: Number,
+            batteryCapacityAfterDischarge: Number
+        },
+
+        // Battery Complaint (Lead Acid)
+        batteryLeadAcid: {
+            batteryNo: String,
+            vehicleCurrent: String,
+            voltageFullCharge: {
+                b1: Number,
+                b2: Number,
+                b3: Number,
+                b4: Number,
+                b5: Number
+            },
+            voltageAfterLowBattery: {
+                b1: Number,
+                b2: Number,
+                b3: Number,
+                b4: Number,
+                b5: Number
+            },
+            capacityAfterDischarge: {
+                b1: Number,
+                b2: Number,
+                b3: Number,
+                b4: Number,
+                b5: Number
+            }
+        },
+
+        // Motor Complaint
+        motor: {
+            motorNo: String,
+            vehicleCurrent: String,
+            diodeTest: {
+                redBlack: String,
+                redGreen: String,
+                redBlue: String,
+                redYellow: String
+            },
+            voltageTest: {
+                redBlack: String,
+                greenBlack: String,
+                blueBlack: String,
+                yellowBlack: String
+            }
+        },
+
+        // Controller Complaint
+        controller: {
+            controllerNo: String,
+            vehicleCurrent: String,
+            continuityTest: {
+                redBlack: { value: String, status: String },
+                redGreen: { value: String, status: String },
+                redBlue: { value: String, status: String },
+                redYellow: { value: String, status: String }
+            },
+            voltageTest: {
+                throttleIP: String,
+                redBlack: String,
+                hallSIP: String
+            }
+        },
+
+        // Converter Complaint
+        converter: {
+            converterNo: String,
+            otherReason: String,
+            inputVoltage: Number,
+            outputVoltage: Number
+        }
+    },
+
     createdBy: {
         type: String,
         default: 'system'
@@ -98,20 +207,35 @@ const warrantySchema = new mongoose.Schema({
 // Auto-generate claim number, work order number, and defect code if not provided
 warrantySchema.pre('save', async function (next) {
     if (!this.claimNumber) {
-        const count = await this.constructor.countDocuments();
-        this.claimNumber = `WC-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
+        // Use atomic counter to avoid race conditions with unique index
+        const year = new Date().getFullYear();
+        const count = await mongoose.connection.db.collection('counters').findOneAndUpdate(
+            { _id: 'warrantyClaim' },
+            { $inc: { seq: 1 } },
+            { upsert: true, returnDocument: 'after' }
+        );
+        this.claimNumber = `WC-${year}-${String(count.seq).padStart(3, '0')}`;
     }
 
     // Auto-generate work order number
     if (!this.workOrderNumber) {
-        const count = await this.constructor.countDocuments();
-        this.workOrderNumber = `WO-${new Date().getFullYear()}-${String(count + 1).padStart(3, '0')}`;
+        const year = new Date().getFullYear();
+        const count = await mongoose.connection.db.collection('counters').findOneAndUpdate(
+            { _id: 'workOrder' },
+            { $inc: { seq: 1 } },
+            { upsert: true, returnDocument: 'after' }
+        );
+        this.workOrderNumber = `WO-${year}-${String(count.seq).padStart(3, '0')}`;
     }
 
     // Auto-generate defect code
     if (!this.defectCode) {
-        const count = await this.constructor.countDocuments();
-        this.defectCode = `DEF-${String(count + 1).padStart(3, '0')}`;
+        const count = await mongoose.connection.db.collection('counters').findOneAndUpdate(
+            { _id: 'defectCode' },
+            { $inc: { seq: 1 } },
+            { upsert: true, returnDocument: 'after' }
+        );
+        this.defectCode = `DEF-${String(count.seq).padStart(3, '0')}`;
     }
 
     next();

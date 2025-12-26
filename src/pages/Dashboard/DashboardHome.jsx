@@ -78,15 +78,15 @@ const DashboardHome = () => {
                     </div>
                 </div>
 
-                {/* Card 4: Components */}
+                {/* Card 4: Warranty Claims */}
                 <div className="bg-[#ECFDF5] border border-emerald-100 p-6 rounded-2xl flex justify-between items-start relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="relative z-10">
-                        <p className="text-sm font-semibold text-slate-600 mb-2">Components</p>
+                        <p className="text-sm font-semibold text-slate-600 mb-2">Warranty Claims</p>
                         <h3 className="text-4xl font-bold text-slate-800 mb-1">5</h3>
-                        <p className="text-xs text-slate-500 font-medium">Active components</p>
+                        <p className="text-xs text-slate-500 font-medium">1 pending review</p>
                     </div>
                     <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
-                        <Package size={24} />
+                        <FileText size={24} />
                     </div>
                 </div>
             </div>

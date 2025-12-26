@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { diePlanService } from '../../services/diePlanService';
 import Pagination from '../../components/Pagination';
-import EditDiePlanModal from '../../components/EditDiePlanModal';
+import EditDiePlanModal from './EditDiePlanModal';
 
 const DiePlan = () => {
     const [stats, setStats] = useState({ total: 0, inDevelopment: 0, completed: 0, delayed: 0 });

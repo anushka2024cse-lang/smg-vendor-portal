@@ -23,7 +23,7 @@ const specificationSchema = new mongoose.Schema({
 const sorSchema = new mongoose.Schema({
     sorNumber: {
         type: String,
-        required: [true, 'SOR Number is required'],
+        required: false,  // Auto-generated in pre-save hook
         unique: true,
         trim: true,
         uppercase: true

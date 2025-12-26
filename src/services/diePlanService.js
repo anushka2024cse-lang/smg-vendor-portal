@@ -3,7 +3,7 @@ import { apiClient } from './config';
 export const diePlanService = {
     getStats: async () => {
         try {
-            const response = await apiClient.get('/die-plans/stats');
+            const response = await apiClient.get('/v1/die-plans/stats');
             return response.data;
         } catch (error) {
             console.error('Error fetching Die Plan stats:', error);
@@ -15,7 +15,7 @@ export const diePlanService = {
         try {
             const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = params;
             const queryString = new URLSearchParams({ page, limit, sortBy, sortOrder }).toString();
-            const response = await apiClient.get(`/die-plans?${queryString}`);
+            const response = await apiClient.get(`/v1/die-plans?${queryString}`);
 
             if (response.data.data) {
                 return {
@@ -43,7 +43,7 @@ export const diePlanService = {
 
     createPlan: async (data) => {
         try {
-            const response = await apiClient.post('/die-plans', data);
+            const response = await apiClient.post('/v1/die-plans', data);
             return response.data;
         } catch (error) {
             console.error('Error creating die plan:', error);
@@ -53,7 +53,7 @@ export const diePlanService = {
 
     updatePlan: async (id, data) => {
         try {
-            const response = await apiClient.patch(`/die-plans/${id}`, data);
+            const response = await apiClient.patch(`/v1/die-plans/${id}`, data);
             return response.data;
         } catch (error) {
             console.error('Error updating die plan:', error);
@@ -63,7 +63,7 @@ export const diePlanService = {
 
     deletePlan: async (id) => {
         try {
-            const response = await apiClient.delete(`/die-plans/${id}`);
+            const response = await apiClient.delete(`/v1/die-plans/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error deleting die plan:', error);

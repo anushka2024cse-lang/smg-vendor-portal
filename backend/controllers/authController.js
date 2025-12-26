@@ -148,3 +148,35 @@ exports.updateProfile = async (req, res) => {
         });
     }
 };
+
+// @desc    Admin authentication
+// @route   POST /api/v1/auth/admin-login
+// @access  Public
+exports.adminLogin = async (req, res) => {
+    try {
+        const { adminKey } = req.body;
+
+        // Validate admin key against environment variable
+        if (!process.env.ADMIN_KEY) {
+            console.error('❌ ADMIN_KEY not set in environment variables');
+            return res.status(500).json({ message: 'Server configuration error' });
+        }
+
+        if (adminKey !== process.env.ADMIN_KEY) {
+            console.log('❌ Invalid admin key attempt');
+            return res.status(401).json({ message: 'Invalid admin credentials' });
+        }
+
+        // Generate token for admin
+        const token = generateToken('admin-user-id');
+
+        res.json({
+            token,
+            role: 'Super Admin',
+            message: 'Admin authenticated successfully'
+        });
+    } catch (error) {
+        console.error('❌ Admin login error:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
