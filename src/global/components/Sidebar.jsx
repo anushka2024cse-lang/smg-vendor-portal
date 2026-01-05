@@ -34,8 +34,10 @@ const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
 
     // Role State (In a real app, this comes from AuthContext)
-    // Defaulting to 'vendorManager' as that is the primary focus of recent tasks
-    const [currentRole, setCurrentRole] = useState('vendorManager');
+    const [currentRole, setCurrentRole] = useState(
+        // Simple check for default role based on login (simulated)
+        localStorage.getItem('userEmail') === 'consoleadmin@smg.com' ? 'admin' : 'vendorManager'
+    );
 
     const userProfile = {
         name: currentRole === 'admin' ? 'Super Admin' : 'Rahul V.',
@@ -143,30 +145,34 @@ const Sidebar = () => {
                         <NavItem icon={ShieldCheck} label="Warranty Claims" path="/warranty-claims" />
                         <NavItem icon={Award} label="Certificates" path="/certificates" />
                         <NavItem icon={Wrench} label="Spare Part Requests" path="/requests/spare-parts" />
-                        <NavItem icon={Truck} label="HSRP Requests" path="/requests/hsrp" />
-                        <NavItem icon={AlertTriangle} label="RSA Requests" path="/requests/rsa" />
-                        <NavItem icon={Factory} label="Production" path="/production" />
+
+
+
                         <NavItem icon={Layers} label="Die Plan" path="/production/die-plan" />
-                        <NavItem icon={Layers} label="Store & Bins" path="/inventory" />
+
 
                         <div className="my-2 border-t border-white/10"></div>
+
 
                         <NavItem icon={Settings} label="Settings" path="/settings" />
                     </div>
 
-                    {/* === ADMIN PORTAL MODULES (Moved after Settings) === */}
-                    <div className="mt-6 mb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest">System Administration</div>
-                    <CollapsibleSection icon={Users} label="User Management" id="admin-users">
-                        <NavItem icon={Users} label="All Users" path="/admin/users" />
-                        <NavItem icon={ShieldCheck} label="Access Roles" path="/admin/users" />
-                    </CollapsibleSection>
+                    {/* === ADMIN PORTAL MODULES === */}
+                    {(currentRole === 'admin' || localStorage.getItem('userEmail') === 'consoleadmin@smg.com') && (
+                        <>
+                            <div className="mt-6 mb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-widest">System Administration</div>
+                            <CollapsibleSection icon={Users} label="User Management" id="admin-users">
+                                <NavItem icon={Users} label="All Users" path="/admin/users" />
+                                <NavItem icon={ShieldCheck} label="Access Roles" path="/admin/users" />
+                            </CollapsibleSection>
 
-                    <CollapsibleSection icon={Settings} label="System Config" id="admin-config">
-                        <NavItem icon={Settings} label="General Settings" path="/admin/settings" />
-                        <NavItem icon={MessageSquare} label="Support Tickets" path="/admin/tickets" />
-                        <NavItem icon={BarChart2} label="Audit Logs" path="/admin/settings" />
-                    </CollapsibleSection>
-
+                            <CollapsibleSection icon={Settings} label="System Config" id="admin-config">
+                                <NavItem icon={Settings} label="General Settings" path="/admin/settings" />
+                                <NavItem icon={MessageSquare} label="Support Tickets" path="/admin/tickets" />
+                                <NavItem icon={BarChart2} label="Audit Logs" path="/admin/settings" />
+                            </CollapsibleSection>
+                        </>
+                    )}
                 </div>
 
                 {/* Footer / User Profile Removed */}

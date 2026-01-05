@@ -31,9 +31,7 @@ import PurchaseOrderCreateReplica from './pages/Procurement/PurchaseOrderCreateR
 import SettingsPage from './pages/Settings/SettingsPage';
 import PaymentList from './pages/Payments/PaymentList';
 const SparePartRequests = lazy(() => import('./pages/Requests/SparePartRequests'));
-// HSRP and RSA being removed per user requirement
-const HSRPRequests = lazy(() => import('./pages/Requests/HSRPRequests'));
-const RSARequests = lazy(() => import('./pages/Requests/RSARequests'));
+
 // Lazy load warranty components
 const WarrantyClaimsList = lazy(() => import('./pages/WarrantyClaims/WarrantyClaimsList'));
 const WarrantyClaimForm = lazy(() => import('./pages/WarrantyClaims/WarrantyClaimForm'));
@@ -98,15 +96,16 @@ function App() {
                                 <Route path="/dispatch" element={<MaterialDispatch />} />
 
                                 {/* Admin & Support */}
-                                <Route path="/admin" element={<Admin />} />
-                                <Route path="/admin/settings" element={<Admin />} />
-                                <Route path="/admin/users" element={<AdminUsers />} />
-                                <Route path="/admin/tickets" element={<AdminTickets />} />
-                                <Route path="/admin/notifications" element={<AdminNotifications />} />
+                                <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin']} />}>
+                                    <Route path="/admin" element={<Admin />} />
+                                    <Route path="/admin/settings" element={<Admin />} />
+                                    <Route path="/admin/users" element={<AdminUsers />} />
+                                    <Route path="/admin/tickets" element={<AdminTickets />} />
+                                    <Route path="/admin/notifications" element={<AdminNotifications />} />
+                                </Route>
 
                                 <Route path="/requests/spare-parts" element={<SparePartRequests />} />
-                                <Route path="/requests/hsrp" element={<HSRPRequests />} />
-                                <Route path="/requests/rsa" element={<RSARequests />} />
+
 
                                 {/* Warranty Claims */}
                                 <Route path="/warranty-claims" element={<WarrantyClaimsList />} />

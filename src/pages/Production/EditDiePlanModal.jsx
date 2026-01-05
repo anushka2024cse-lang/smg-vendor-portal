@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
-import { diePlanService } from '../services/diePlanService';
+import { diePlanService } from '../../services/diePlanService';
 
 const EditDiePlanModal = ({ isOpen, onClose, plan, onSuccess }) => {
     const [formData, setFormData] = useState({

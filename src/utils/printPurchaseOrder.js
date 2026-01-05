@@ -9,14 +9,17 @@ const generateInvoiceHTML = (formData, items, showPrice = true) => {
     const subtotal = items.reduce((sum, i) => sum + (i.qty * i.price), 0);
     const taxAmount = items.reduce((sum, i) => sum + (i.qty * i.price * i.tax / 100), 0);
     const grandTotal = subtotal + taxAmount;
+    // We use the same path for preview; image loading is handled by browser
     const logoUrl = '/src/asset/logo/Logo.jpg';
 
-    const itemsHtml = items.map((item, index) => `
+    const itemsHtml = items.map((item, index) => {
+        const itemCode = item.desc && item.desc.startsWith('ID: ') ? item.desc.replace('ID: ', '') : '';
+        return `
         <tr>
             <td class="center">${index + 1}</td>
+            <td class="center">${itemCode}</td>
             <td>
                 <div class="item-name">${item.name || 'Item Name'}</div>
-                ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
             </td>
             <td class="center">${item.qty}</td>
             ${showPrice ? `
@@ -25,7 +28,7 @@ const generateInvoiceHTML = (formData, items, showPrice = true) => {
                 <td class="right">${((item.qty * item.price) * (1 + item.tax / 100)).toFixed(2)}</td>
             ` : ''}
         </tr>
-    `).join('');
+    `}).join('');
 
     return { subtotal, taxAmount, grandTotal, logoUrl, itemsHtml };
 };
@@ -36,7 +39,7 @@ const getInvoiceStyles = () => `
     body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #1e293b; background: #fff; padding: 10px; -webkit-print-color-adjust: exact; print-color-adjust: exact; -webkit-user-modify: read-only; }
     .invoice { max-width: 800px; margin: 0 auto; padding: 15px; border: 1px solid #e2e8f0; }
     .header { text-align: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 10px; }
-    .logo { width: 60px; height: 60px; object-fit: contain; margin-bottom: 5px; }
+    .logo { width: 80px; height: auto; object-fit: contain; margin-bottom: 5px; }
     .company-name { font-size: 18px; font-weight: bold; color: #1e3a5f; margin-bottom: 3px; }
     .company-details { font-size: 10px; color: #64748b; line-height: 1.4; }
     .po-title { text-align: center; margin: 10px 0; }
@@ -108,12 +111,12 @@ const getInvoiceBody = (formData, invoiceData, showPrice) => `
         
         <div class="parties">
             <div class="party-box">
-                <h4>Bill To (Vendor)</h4>
+                <h4>FROM</h4>
                 <div class="name">${formData.vendorName || 'Not Selected'}</div>
                 <p>${formData.vendorAddress}<br>Phone: ${formData.vendorContact}<br>Email: ${formData.vendorEmail}<br>GSTIN: ${formData.vendorGSTIN}</p>
             </div>
             <div class="party-box">
-                <h4>Ship To</h4>
+                <h4>SHIP TO</h4>
                 <div class="name">SMG Electric Scooters - Plant 1</div>
                 <p>${formData.deliveryAddress}<br>Expected: ${formData.expectedDate || 'TBD'}<br>Mode: ${formData.shippingMode}</p>
             </div>
@@ -122,9 +125,10 @@ const getInvoiceBody = (formData, invoiceData, showPrice) => `
         <table class="items-table">
             <thead>
                 <tr>
-                    <th class="center" style="width:40px">#</th>
+                    <th class="center" style="width:40px">Sr No</th>
+                    <th class="center" style="width:80px">Item Code</th>
                     <th>Description</th>
-                    <th class="center" style="width:60px">Qty</th>
+                    <th class="center" style="width:60px">Quantity</th>
                     ${showPrice ? '<th class="right" style="width:80px">Rate</th><th class="center" style="width:60px">GST</th><th class="right" style="width:100px">Amount</th>' : ''}
                 </tr>
             </thead>
@@ -154,219 +158,15 @@ const getInvoiceBody = (formData, invoiceData, showPrice) => `
     </div>
 `;
 
-// Generate PDF using jsPDF (direct method - no browser print)
-const generatePDFWithJsPDF = (formData, items, showPrice) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Calculate totals
-    const subtotal = items.reduce((sum, i) => sum + (i.qty * i.price), 0);
-    const taxAmount = items.reduce((sum, i) => sum + (i.qty * i.price * i.tax / 100), 0);
-    const grandTotal = subtotal + taxAmount;
-
-    let y = 15;
-
-    // Company Header
-    doc.setFontSize(20);
-    doc.setTextColor(30, 58, 95);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SMG', pageWidth / 2, y, { align: 'center' });
-    y += 8;
-
-    doc.setFontSize(14);
-    doc.text(formData.billingName, pageWidth / 2, y, { align: 'center' });
-    y += 6;
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 116, 139);
-    doc.text(formData.billingAddress, pageWidth / 2, y, { align: 'center' });
-    y += 4;
-    doc.text(`Phone: ${formData.billingContact} | Email: ${formData.billingEmail}`, pageWidth / 2, y, { align: 'center' });
-    y += 4;
-    doc.text(`GSTIN: ${formData.billingGSTIN}`, pageWidth / 2, y, { align: 'center' });
-    y += 8;
-
-    // Line
-    doc.setDrawColor(30, 58, 95);
-    doc.setLineWidth(0.5);
-    doc.line(15, y, pageWidth - 15, y);
-    y += 10;
-
-    // PO Title
-    doc.setFontSize(16);
-    doc.setTextColor(30, 58, 95);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PURCHASE ORDER', pageWidth / 2, y, { align: 'center' });
-    y += 8;
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(30, 41, 59);
-    doc.text(`PO No: ${formData.poNumber}    Date: ${new Date().toLocaleDateString('en-IN')}    Status: ${formData.status}`, pageWidth / 2, y, { align: 'center' });
-    y += 12;
-
-    // Bill To / Ship To
-    const boxWidth = (pageWidth - 40) / 2;
-
-    // Bill To Box
-    doc.setFillColor(248, 250, 252);
-    doc.rect(15, y, boxWidth, 35, 'F');
-    doc.setDrawColor(226, 232, 240);
-    doc.rect(15, y, boxWidth, 35, 'S');
-
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    doc.text('BILL TO (VENDOR)', 18, y + 5);
-    doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text(formData.vendorName || 'Not Selected', 18, y + 12);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    const vendorLines = doc.splitTextToSize(`${formData.vendorAddress}\nPhone: ${formData.vendorContact}\nEmail: ${formData.vendorEmail}\nGSTIN: ${formData.vendorGSTIN}`, boxWidth - 10);
-    doc.text(vendorLines, 18, y + 18);
-
-    // Ship To Box
-    const shipX = 20 + boxWidth;
-    doc.setFillColor(248, 250, 252);
-    doc.rect(shipX, y, boxWidth, 35, 'F');
-    doc.setDrawColor(226, 232, 240);
-    doc.rect(shipX, y, boxWidth, 35, 'S');
-
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    doc.text('SHIP TO', shipX + 3, y + 5);
-    doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('SMG Electric Scooters - Plant 1', shipX + 3, y + 12);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    const shipLines = doc.splitTextToSize(`${formData.deliveryAddress}\nExpected: ${formData.expectedDate || 'TBD'}\nMode: ${formData.shippingMode}`, boxWidth - 10);
-    doc.text(shipLines, shipX + 3, y + 18);
-
-    y += 42;
-
-    // Items Table
-    const tableColumns = showPrice
-        ? [['#', 'Description', 'Qty', 'Rate', 'GST', 'Amount']]
-        : [['#', 'Description', 'Qty']];
-
-    const tableRows = items.map((item, idx) => {
-        const baseRow = [
-            (idx + 1).toString(),
-            item.name + (item.desc ? `\n${item.desc}` : ''),
-            item.qty.toString()
-        ];
-        if (showPrice) {
-            baseRow.push(
-                item.price.toFixed(2),
-                `${item.tax}%`,
-                ((item.qty * item.price) * (1 + item.tax / 100)).toFixed(2)
-            );
-        }
-        return baseRow;
-    });
-
-    doc.autoTable({
-        startY: y,
-        head: tableColumns,
-        body: tableRows,
-        theme: 'grid',
-        headStyles: { fillColor: [30, 58, 95], textColor: 255, fontSize: 8 },
-        bodyStyles: { fontSize: 9 },
-        columnStyles: showPrice ? {
-            0: { halign: 'center', cellWidth: 12 },
-            1: { cellWidth: 'auto' },
-            2: { halign: 'center', cellWidth: 20 },
-            3: { halign: 'right', cellWidth: 25 },
-            4: { halign: 'center', cellWidth: 20 },
-            5: { halign: 'right', cellWidth: 30 }
-        } : {
-            0: { halign: 'center', cellWidth: 15 },
-            1: { cellWidth: 'auto' },
-            2: { halign: 'center', cellWidth: 25 }
-        },
-        margin: { left: 15, right: 15 }
-    });
-
-    y = doc.lastAutoTable.finalY + 8;
-
-    // Totals (if showing price)
-    if (showPrice) {
-        doc.setFontSize(10);
-        doc.setTextColor(100, 116, 139);
-        doc.text('Subtotal:', pageWidth - 65, y);
-        doc.setTextColor(30, 41, 59);
-        doc.text(`Rs ${subtotal.toFixed(2)}`, pageWidth - 15, y, { align: 'right' });
-        y += 6;
-
-        doc.setTextColor(100, 116, 139);
-        doc.text('GST:', pageWidth - 65, y);
-        doc.setTextColor(30, 41, 59);
-        doc.text(`Rs ${taxAmount.toFixed(2)}`, pageWidth - 15, y, { align: 'right' });
-        y += 6;
-
-        doc.setFillColor(30, 58, 95);
-        doc.rect(pageWidth - 70, y - 3, 55, 8, 'F');
-        doc.setTextColor(255);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Total:', pageWidth - 65, y + 2);
-        doc.text(`Rs ${grandTotal.toFixed(2)}`, pageWidth - 17, y + 2, { align: 'right' });
-        y += 15;
-    }
-
-    // Terms
-    doc.setFillColor(248, 250, 252);
-    doc.rect(15, y, pageWidth - 30, 25, 'F');
-    doc.setDrawColor(226, 232, 240);
-    doc.rect(15, y, pageWidth - 30, 25, 'S');
-    doc.setFontSize(8);
-    doc.setTextColor(100, 116, 139);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TERMS & CONDITIONS', 18, y + 5);
-    doc.setFont('helvetica', 'normal');
-    const termsLines = doc.splitTextToSize(formData.termsAndConditions, pageWidth - 40);
-    doc.text(termsLines, 18, y + 11);
-    y += 32;
-
-    // Signatures
-    const sigWidth = (pageWidth - 50) / 2;
-    doc.setDrawColor(30, 58, 95);
-    doc.line(20, y + 10, 20 + sigWidth, y + 10);
-    doc.line(pageWidth - 20 - sigWidth, y + 10, pageWidth - 20, y + 10);
-
-    doc.setFontSize(9);
-    doc.setTextColor(30, 41, 59);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`For ${formData.vendorName || 'Vendor'}`, 20 + sigWidth / 2, y + 16, { align: 'center' });
-    doc.text(`For ${formData.billingName}`, pageWidth - 20 - sigWidth / 2, y + 16, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text('(Authorized Signatory)', 20 + sigWidth / 2, y + 22, { align: 'center' });
-    doc.text('(Authorized Signatory)', pageWidth - 20 - sigWidth / 2, y + 22, { align: 'center' });
-
-    // Footer
-    y = doc.internal.pageSize.getHeight() - 15;
-    doc.setDrawColor(226, 232, 240);
-    doc.line(15, y - 5, pageWidth - 15, y - 5);
-    doc.setFontSize(8);
-    doc.setTextColor(148, 163, 184);
-    doc.text('Computer-generated document. No signature required.', pageWidth / 2, y, { align: 'center' });
-
-    return doc;
-};
-
 // Print Purchase Order - Opens in new tab with download button
 export const printPurchaseOrder = (formData, items, showPrice = true) => {
     const invoiceData = generateInvoiceHTML(formData, items, showPrice);
 
     // Serialize data for passing to new window
-    const dataStr = encodeURIComponent(JSON.stringify({ formData, items, showPrice }));
+    // image path
+    const logoUrl = '/src/asset/logo/Logo.jpg';
+
+    const dataStr = encodeURIComponent(JSON.stringify({ formData, items, showPrice, logoUrl }));
 
     const html = `<!DOCTYPE html>
 <html lang="en" spellcheck="false">
@@ -387,8 +187,30 @@ export const printPurchaseOrder = (formData, items, showPrice = true) => {
     <script>
         const invoiceData = JSON.parse(decodeURIComponent('${dataStr}'));
         
-        function downloadPDF() {
-            const { formData, items, showPrice } = invoiceData;
+        // Helper to load image
+        function getBase64Image(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/jpeg'));
+                };
+                img.onerror = () => {
+                    console.error('Failed to load image:', url);
+                    // Resolve with null to continue without logo
+                    resolve(null);
+                };
+                img.src = url;
+            });
+        }
+
+        async function downloadPDF() {
+            const { formData, items, showPrice, logoUrl } = invoiceData;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -399,14 +221,34 @@ export const printPurchaseOrder = (formData, items, showPrice = true) => {
             
             let y = 15;
             
-            // Header
-            doc.setFontSize(20);
-            doc.setTextColor(30, 58, 95);
-            doc.setFont('helvetica', 'bold');
-            doc.text('SMG', pageWidth / 2, y, { align: 'center' });
-            y += 8;
+            // Header Logo - centered
+            try {
+                const logoData = await getBase64Image(logoUrl);
+                if (logoData) {
+                    // Assuming logo has around 1:1 aspect ratio or we fit it in a box
+                    // Let's make it 25mm wide
+                    const logoWidth = 25;
+                    const logoHeight = 25; // Approximate
+                    const xPos = (pageWidth - logoWidth) / 2;
+                    doc.addImage(logoData, 'JPEG', xPos, y, logoWidth, logoHeight);
+                    // Adjust y to be below image
+                    y += logoHeight + 5; 
+                } else {
+                     // Fallback if image fails
+                    doc.setFontSize(20);
+                    doc.setTextColor(30, 58, 95);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('SMG', pageWidth / 2, y + 10, { align: 'center' });
+                    y += 18;
+                }
+            } catch (e) {
+                console.error(e);
+                y += 10;
+            }
             
             doc.setFontSize(14);
+            doc.setTextColor(30, 58, 95);
+            doc.setFont('helvetica', 'bold');
             doc.text(formData.billingName, pageWidth / 2, y, { align: 'center' });
             y += 6;
             
@@ -448,7 +290,7 @@ export const printPurchaseOrder = (formData, items, showPrice = true) => {
             
             doc.setFontSize(8);
             doc.setTextColor(100, 116, 139);
-            doc.text('BILL TO (VENDOR)', 18, y + 5);
+            doc.text('FROM', 18, y + 5); 
             doc.setTextColor(30, 41, 59);
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(10);
@@ -484,12 +326,13 @@ export const printPurchaseOrder = (formData, items, showPrice = true) => {
             y += 42;
             
             // Items Table
-            const tableHead = showPrice 
-                ? [['#', 'Description', 'Qty', 'Rate', 'GST', 'Amount']]
-                : [['#', 'Description', 'Qty']];
+            const columns = showPrice 
+                ? ['Sr No', 'Item Code', 'Description', 'Quantity', 'Rate', 'GST', 'Amount']
+                : ['Sr No', 'Item Code', 'Description', 'Quantity'];
             
             const tableBody = items.map((item, idx) => {
-                const row = [(idx + 1).toString(), item.name || '', item.qty.toString()];
+                const itemCode = item.desc && item.desc.startsWith('ID: ') ? item.desc.replace('ID: ', '') : '';
+                const row = [(idx + 1).toString(), itemCode, item.name || '', item.qty.toString()];
                 if (showPrice) {
                     row.push(item.price.toFixed(2), item.tax + '%', ((item.qty * item.price) * (1 + item.tax / 100)).toFixed(2));
                 }
@@ -498,12 +341,26 @@ export const printPurchaseOrder = (formData, items, showPrice = true) => {
             
             doc.autoTable({
                 startY: y,
-                head: tableHead,
+                head: [columns], // Note: head expects array of arrays
                 body: tableBody,
                 theme: 'grid',
                 headStyles: { fillColor: [30, 58, 95], textColor: 255, fontSize: 8 },
                 bodyStyles: { fontSize: 9 },
-                margin: { left: 15, right: 15 }
+                margin: { left: 15, right: 15 },
+                columnStyles: showPrice ? {
+                    0: { halign: 'center', cellWidth: 12 }, // Sr No
+                    1: { halign: 'center', cellWidth: 25 }, // Item Code
+                    2: { cellWidth: 'auto' },               // Description
+                    3: { halign: 'center', cellWidth: 15 }, // Quantity
+                    4: { halign: 'right', cellWidth: 20 },  // Rate
+                    5: { halign: 'center', cellWidth: 15 }, // GST
+                    6: { halign: 'right', cellWidth: 25 }   // Amount
+                } : {
+                    0: { halign: 'center', cellWidth: 15 },
+                    1: { halign: 'center', cellWidth: 30 },
+                    2: { cellWidth: 'auto' },
+                    3: { halign: 'center', cellWidth: 20 }
+                }
             });
             
             y = doc.lastAutoTable.finalY + 8;

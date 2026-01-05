@@ -18,7 +18,7 @@ const VendorSchema = new mongoose.Schema({
     city: String,
     status: {
         type: String,
-        enum: ['Active', 'Pending', 'Blocked'],
+        enum: ['Active', 'Pending', 'Blacklisted'],
         default: 'Pending'
     },
     contact: {

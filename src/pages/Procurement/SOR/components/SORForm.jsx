@@ -1,37 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, FileText, Building2, Car } from 'lucide-react';
 
-const SORForm = ({ id, existingData, isEditMode }) => {
+const SORForm = ({ id, isEditMode, formData, setFormData, specifications, setSpecifications }) => {
+    // State is now managed by parent (SORWorkspace)
 
-    // Form State
-    const [formData, setFormData] = useState({
-        sorNumber: 'SOR-202512-785',
-        vendor: '',
-        documentNumber: 'LBD-MKTGSOR-PC',
-        companyName: '',
-        enquirerName: '',
-        contactInfo: '',
-        natureOfCompany: '',
-        keyAccountManager: '',
-        technicalEngineer: '',
-        vehicleType: '2W',
-        chargerRatingV: 0,
-        chargerRatingW: 0,
-    });
-
-    const [specifications, setSpecifications] = useState([
-        { id: 1, specification: '', customerRequirement: '', compliance: 'Yes', remarks: '' }
-    ]);
-
-    // Load existing data if available
-    useEffect(() => {
-        if (existingData) {
-            setFormData(prev => ({ ...prev, ...existingData }));
-            if (existingData.specifications) {
-                setSpecifications(existingData.specifications);
-            }
-        }
-    }, [existingData]);
+    // Data loading logic removed (handled by parent)
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -81,6 +54,7 @@ const SORForm = ({ id, existingData, isEditMode }) => {
                                 name="sorNumber"
                                 value={formData.sorNumber}
                                 onChange={handleInputChange}
+                                placeholder="Enter SOR Number"
                                 className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none hover:border-slate-300"
                             />
                         ) : (
@@ -361,8 +335,8 @@ const SORForm = ({ id, existingData, isEditMode }) => {
                                         ) : (
                                             <div className="text-sm text-slate-900">
                                                 <span className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold ${spec.compliance === 'Yes' ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-200' :
-                                                        spec.compliance === 'No' ? 'bg-red-100 text-red-700 border-2 border-red-200' :
-                                                            'bg-amber-100 text-amber-700 border-2 border-amber-200'
+                                                    spec.compliance === 'No' ? 'bg-red-100 text-red-700 border-2 border-red-200' :
+                                                        'bg-amber-100 text-amber-700 border-2 border-amber-200'
                                                     }`}>
                                                     {spec.compliance}
                                                 </span>

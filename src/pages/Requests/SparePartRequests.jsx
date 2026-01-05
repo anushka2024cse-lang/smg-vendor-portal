@@ -9,9 +9,11 @@ import {
     XCircle,
     MoreVertical,
     X,
-    Save
+    Save,
+    Printer
 } from 'lucide-react';
 import { sparePartService } from '../../services/sparePartService';
+import { printSparePartRequest } from '../../utils/printSparePartRequest';
 import Pagination from '../../components/Pagination';
 
 const SparePartRequests = () => {
@@ -137,7 +139,8 @@ const SparePartRequests = () => {
             quantity: request.quantity,
             priority: request.priority,
             reason: request.reason || '',
-            dueDate: request.dueDate || ''
+            dueDate: request.dueDate || '',
+            status: request.status
         });
         setIsEditModalOpen(true);
     };
@@ -168,65 +171,64 @@ const SparePartRequests = () => {
                 </button>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 flex justify-between items-center">
+            {/* Stats Cards - PO Style */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-blue-600 font-semibold text-sm uppercase tracking-wide">Total Requests</p>
-                        <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.total}</h3>
+                        <p className="text-slate-500 text-xs font-medium uppercase">Total Requests</p>
+                        <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
                     </div>
-                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                        <Package size={24} />
-                    </div>
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Package size={20} /></div>
                 </div>
-                <div className="bg-orange-50 border border-orange-100 rounded-xl p-6 flex justify-between items-center">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-orange-600 font-semibold text-sm uppercase tracking-wide">Pending Review</p>
-                        <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.pending}</h3>
+                        <p className="text-slate-500 text-xs font-medium uppercase">Pending Review</p>
+                        <p className="text-2xl font-bold text-slate-900">{stats.pending}</p>
                     </div>
-                    <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center">
-                        <Clock size={24} />
-                    </div>
+                    <div className="p-3 bg-orange-100 text-orange-600 rounded-lg"><Clock size={20} /></div>
                 </div>
-                <div className="bg-green-50 border border-green-100 rounded-xl p-6 flex justify-between items-center">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-green-600 font-semibold text-sm uppercase tracking-wide">Approved</p>
-                        <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.approved}</h3>
+                        <p className="text-slate-500 text-xs font-medium uppercase">Approved</p>
+                        <p className="text-2xl font-bold text-green-700">{stats.approved}</p>
                     </div>
-                    <div className="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
-                        <CheckCircle2 size={24} />
-                    </div>
+                    <div className="p-3 bg-green-100 text-green-600 rounded-lg"><CheckCircle2 size={20} /></div>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="relative w-full md:w-96">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search by request #, vendor, component..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all text-sm"
-                    />
-                </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 outline-none cursor-pointer"
-                    >
-                        <option value="All">All Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-            </div>
+            {/* Main Content Card - PO Style */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden min-h-[400px]">
 
-            {/* Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                {/* Toolbar */}
+                <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row gap-4 items-center justify-between">
+                    {/* Tabs */}
+                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                        {['All', 'Pending', 'Approved', 'Rejected'].map(status => (
+                            <button
+                                key={status}
+                                onClick={() => setStatusFilter(status)}
+                                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${statusFilter === status
+                                    ? 'bg-white text-blue-900 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Search */}
+                    <div className="relative w-full md:w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search requests..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-900/20 text-sm"
+                        />
+                    </div>
+                </div>
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
@@ -277,6 +279,9 @@ const SparePartRequests = () => {
                                                 <button onClick={() => { setIsDetailsModalOpen(true); }} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-md">
                                                     View Details
                                                 </button>
+                                                <button onClick={() => { printSparePartRequest(req); setSelectedRequest(null); }} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-md">
+                                                    Print
+                                                </button>
                                                 <button onClick={() => { openEditModal(req); setSelectedRequest(null); }} className="w-full text-left px-3 py-2 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md">
                                                     Edit
                                                 </button>
@@ -314,163 +319,293 @@ const SparePartRequests = () => {
                 )}
             </div>
 
-            {/* Create Modal */}
+            {/* Create Modal - Document Style */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-900">New Spare Part Request</h2>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-900 rounded-lg text-white">
+                                    <Package size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900">New Spare Part Requisition</h2>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mt-0.5">FORM-SPR-2024</p>
+                                </div>
+                            </div>
                             <button
                                 onClick={() => setIsCreateModalOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                                className="text-slate-400 hover:text-slate-600 transition-colors p-2 hover:bg-slate-200 rounded-full"
                             >
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Vendor</label>
-                                <select
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    value={formData.vendor}
-                                    onChange={e => setFormData({ ...formData, vendor: e.target.value })}
-                                >
-                                    <option value="">Select Vendor</option>
-                                    <option value="Meenakshi Polymers">Meenakshi Polymers</option>
-                                    <option value="NeoSky India">NeoSky India</option>
-                                    <option value="Alpha Tech">Alpha Tech</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Component</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    placeholder="e.g. Casing Type-A"
-                                    value={formData.component}
-                                    onChange={e => setFormData({ ...formData, component: e.target.value })}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Quantity</label>
-                                    <input
-                                        type="number"
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                        placeholder="0"
-                                        value={formData.quantity}
-                                        onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                                    />
+                        {/* Modal Body - Scrollable Form */}
+                        <div className="p-8 overflow-y-auto bg-slate-50/50">
+                            <div className="max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm rounded-xl p-8">
+
+                                {/* Form Section Title */}
+                                <div className="mb-6 border-b border-slate-100 pb-4">
+                                    <h3 className="text-sm font-bold text-blue-900 uppercase tracking-widest">Requisition Details</h3>
+                                    <p className="text-xs text-slate-500 mt-1">Please fill in the required component and vendor information.</p>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Priority</label>
-                                    <select
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                        value={formData.priority}
-                                        onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                                    >
-                                        <option value="Low">Low</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="High">High</option>
-                                    </select>
+
+                                <div className="space-y-6">
+                                    {/* Primary Info Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Vendor Selection</label>
+                                            <select
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                value={formData.vendor}
+                                                onChange={e => setFormData({ ...formData, vendor: e.target.value })}
+                                            >
+                                                <option value="">Select Vendor...</option>
+                                                <option value="Meenakshi Polymers">Meenakshi Polymers</option>
+                                                <option value="NeoSky India">NeoSky India</option>
+                                                <option value="Alpha Tech">Alpha Tech</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Required By (Date)</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                                    <Clock size={16} />
+                                                </div>
+                                                <input
+                                                    type="date"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                    value={formData.dueDate}
+                                                    onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Component Details */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Component Description</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                            placeholder="Enter component name, ID, or specification..."
+                                            value={formData.component}
+                                            onChange={e => setFormData({ ...formData, component: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {/* Qty & Priority */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Quantity Required</label>
+                                            <input
+                                                type="number"
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                placeholder="0"
+                                                value={formData.quantity}
+                                                onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Priority Level</label>
+                                            <div className="flex gap-2">
+                                                {['Low', 'Medium', 'High'].map((p) => (
+                                                    <button
+                                                        key={p}
+                                                        onClick={() => setFormData({ ...formData, priority: p })}
+                                                        className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${formData.priority === p
+                                                            ? 'bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-500/20'
+                                                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                                            }`}
+                                                    >
+                                                        {p}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Reason */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Reason / Remarks (Optional)</label>
+                                        <textarea
+                                            rows="3"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all resize-none"
+                                            placeholder="Why is this spare part needed?"
+                                            value={formData.reason}
+                                            onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
+
+                                {/* Form Footer */}
+                                <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                                    <p>SMG-SPR-V1.0</p>
+                                    <p>Authorized Signature Required upon Approval</p>
+                                </div>
+
                             </div>
                         </div>
 
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                        {/* Modal Footer */}
+                        <div className="p-6 bg-white border-t border-slate-200 flex justify-end gap-3 z-10">
                             <button
                                 onClick={() => setIsCreateModalOpen(false)}
-                                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+                                className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreateSubmit}
-                                className="px-4 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-2"
+                                className="px-6 py-2.5 bg-blue-900 text-white font-bold rounded-lg hover:bg-blue-800 transition-all shadow-lg hover:shadow-xl text-sm flex items-center gap-2 transform active:scale-95 duration-150"
                             >
                                 <Save size={18} />
-                                Create Request
+                                Submit Requisition
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Edit Modal */}
+            {/* Edit Modal - Document Style */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-900">Edit Spare Part Request</h2>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-900 rounded-lg text-white">
+                                    <Package size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900">Edit Requisition</h2>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mt-0.5">UPDATE REQUEST DETAILS</p>
+                                </div>
+                            </div>
                             <button
-                                onClick={() => { setIsEditModalOpen(false); setFormData({ vendor: '', component: '', quantity: '', priority: 'Medium', reason: '', dueDate: '' }); }}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                                onClick={() => { setIsEditModalOpen(false); setFormData({ vendor: '', component: '', quantity: '', priority: 'Medium', reason: '', dueDate: '', status: 'Pending' }); }}
+                                className="text-slate-400 hover:text-slate-600 transition-colors p-2 hover:bg-slate-200 rounded-full"
                             >
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Vendor</label>
-                                <select
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    value={formData.vendor}
-                                    onChange={e => setFormData({ ...formData, vendor: e.target.value })}
-                                >
-                                    <option value="">Select Vendor</option>
-                                    <option value="Meenakshi Polymers">Meenakshi Polymers</option>
-                                    <option value="NeoSky India">NeoSky India</option>
-                                    <option value="Alpha Tech">Alpha Tech</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium text-slate-700">Component</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                    placeholder="e.g. Casing Type-A"
-                                    value={formData.component}
-                                    onChange={e => setFormData({ ...formData, component: e.target.value })}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Quantity</label>
-                                    <input
-                                        type="number"
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                        placeholder="0"
-                                        value={formData.quantity}
-                                        onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">Priority</label>
-                                    <select
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                        value={formData.priority}
-                                        onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                                    >
-                                        <option value="Low">Low</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="High">High</option>
-                                    </select>
+                        <div className="p-8 overflow-y-auto bg-slate-50/50">
+                            <div className="max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm rounded-xl p-8">
+                                <div className="space-y-6">
+                                    {/* Admin Status Section */}
+                                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                        <label className="text-xs font-bold text-slate-500 uppercase block mb-2">Current Status</label>
+                                        <div className="flex gap-2">
+                                            {['Pending', 'Approved', 'Rejected'].map((s) => (
+                                                <button
+                                                    key={s}
+                                                    onClick={() => setFormData({ ...formData, status: s })}
+                                                    className={`flex-1 py-2 text-xs font-bold rounded-lg border transition-all ${formData.status === s
+                                                            ? s === 'Approved' ? 'bg-green-50 border-green-200 text-green-700 ring-1 ring-green-500/20'
+                                                                : s === 'Rejected' ? 'bg-red-50 border-red-200 text-red-700 ring-1 ring-red-500/20'
+                                                                    : 'bg-orange-50 border-orange-200 text-orange-700 ring-1 ring-orange-500/20'
+                                                            : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                                                        }`}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Primary Info */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Vendor Selection</label>
+                                            <select
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                value={formData.vendor}
+                                                onChange={e => setFormData({ ...formData, vendor: e.target.value })}
+                                            >
+                                                <option value="">Select Vendor...</option>
+                                                <option value="Meenakshi Polymers">Meenakshi Polymers</option>
+                                                <option value="NeoSky India">NeoSky India</option>
+                                                <option value="Alpha Tech">Alpha Tech</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Required By (Date)</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                                    <Clock size={16} />
+                                                </div>
+                                                <input
+                                                    type="date"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                    value={formData.dueDate}
+                                                    onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Component */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Component Description</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                            value={formData.component}
+                                            onChange={e => setFormData({ ...formData, component: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {/* Qty & Priority */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Quantity Required</label>
+                                            <input
+                                                type="number"
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                value={formData.quantity}
+                                                onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-slate-500 uppercase">Priority Level</label>
+                                            <select
+                                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all"
+                                                value={formData.priority}
+                                                onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                                            >
+                                                <option value="Low">Low</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="High">High</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Reason */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-500 uppercase">Reason / Remarks (Optional)</label>
+                                        <textarea
+                                            rows="3"
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm font-medium transition-all resize-none"
+                                            value={formData.reason}
+                                            onChange={e => setFormData({ ...formData, reason: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                        <div className="p-6 bg-white border-t border-slate-200 flex justify-end gap-3 z-10">
                             <button
                                 onClick={() => { setIsEditModalOpen(false); setFormData({ vendor: '', component: '', quantity: '', priority: 'Medium', reason: '', dueDate: '' }); }}
-                                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-200 rounded-lg transition-colors"
+                                className="px-6 py-2.5 text-slate-600 font-bold hover:bg-slate-100 rounded-lg transition-colors text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleEditSubmit}
-                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                className="px-6 py-2.5 bg-blue-900 text-white font-bold rounded-lg hover:bg-blue-800 transition-all shadow-lg hover:shadow-xl text-sm flex items-center gap-2 transform active:scale-95 duration-150"
                             >
                                 <Save size={18} />
                                 Update Request
@@ -483,25 +618,121 @@ const SparePartRequests = () => {
             {/* Details Modal */}
             {isDetailsModalOpen && selectedRequest && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                            <h2 className="text-xl font-bold text-slate-900">Request Details</h2>
-                            <button onClick={() => setIsDetailsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                                <X size={24} />
-                            </button>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><p className="text-xs text-slate-500 uppercase">Request ID</p><p className="text-sm font-medium">{selectedRequest.id}</p></div>
-                                <div><p className="text-xs text-slate-500 uppercase">Status</p><p className="text-sm font-medium">{selectedRequest.status}</p></div>
-                                <div><p className="text-xs text-slate-500 uppercase">Vendor</p><p className="text-sm font-medium">{selectedRequest.vendor}</p></div>
-                                <div><p className="text-xs text-slate-500 uppercase">Component</p><p className="text-sm font-medium">{selectedRequest.component}</p></div>
-                                <div><p className="text-xs text-slate-500 uppercase">Quantity</p><p className="text-sm font-medium">{selectedRequest.quantity}</p></div>
-                                <div><p className="text-xs text-slate-500 uppercase">Priority</p><p className="text-sm font-medium">{selectedRequest.priority}</p></div>
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900">Request Details</h2>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="font-mono text-sm text-slate-500">{selectedRequest.id}</span>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(selectedRequest.status)}`}>
+                                        {selectedRequest.status}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {selectedRequest.status === 'Pending' && (
+                                    <>
+                                        <button
+                                            onClick={async () => {
+                                                await sparePartService.updateRequest(selectedRequest._id, { ...selectedRequest, status: 'Approved' });
+                                                loadData();
+                                                setIsDetailsModalOpen(false);
+                                            }}
+                                            className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-bold text-sm flex items-center gap-2"
+                                        >
+                                            <CheckCircle2 size={16} />
+                                            Approve
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                await sparePartService.updateRequest(selectedRequest._id, { ...selectedRequest, status: 'Rejected' });
+                                                loadData();
+                                                setIsDetailsModalOpen(false);
+                                            }}
+                                            className="px-3 py-2 bg-red-100 text-red-700 border border-red-200 rounded-lg hover:bg-red-200 transition-colors font-bold text-sm flex items-center gap-2"
+                                        >
+                                            <XCircle size={16} />
+                                            Reject
+                                        </button>
+                                        <div className="w-px h-8 bg-slate-200 mx-1"></div>
+                                    </>
+                                )}
+                                <button
+                                    onClick={() => printSparePartRequest(selectedRequest)}
+                                    className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm font-medium text-sm"
+                                >
+                                    <Printer size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setIsDetailsModalOpen(false)}
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
                             </div>
                         </div>
+
+                        {/* Content */}
+                        <div className="p-8 overflow-y-auto bg-white">
+                            {/* Parties Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                <div className="p-5 bg-slate-50 rounded-xl border border-slate-100">
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">From Vendor</h4>
+                                    <div className="text-lg font-bold text-slate-900">{selectedRequest.vendor}</div>
+                                    <div className="text-sm text-slate-600 mt-1">Vendor ID: {selectedRequest.vendorId || 'N/A'}</div>
+                                </div>
+                                <div className="p-5 bg-slate-50 rounded-xl border border-slate-100">
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">To Company</h4>
+                                    <div className="text-lg font-bold text-slate-900">SMG Electric Scooters</div>
+                                    <div className="text-sm text-slate-600 mt-1">Noida Plant 1</div>
+                                </div>
+                            </div>
+
+                            {/* Item Table */}
+                            <div className="border border-slate-200 rounded-xl overflow-hidden mb-8">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-slate-800 text-white">
+                                        <tr>
+                                            <th className="px-6 py-3 font-medium cursor-default">Component Name</th>
+                                            <th className="px-6 py-3 font-medium cursor-default text-center">Quantity</th>
+                                            <th className="px-6 py-3 font-medium cursor-default">Priority</th>
+                                            <th className="px-6 py-3 font-medium cursor-default">Due Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-slate-100">
+                                        <tr>
+                                            <td className="px-6 py-4 font-medium text-slate-900">{selectedRequest.component}</td>
+                                            <td className="px-6 py-4 text-center font-bold text-slate-900">{selectedRequest.quantity}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${selectedRequest.priority === 'High' ? 'bg-red-50 text-red-700' :
+                                                    selectedRequest.priority === 'Medium' ? 'bg-orange-50 text-orange-700' :
+                                                        'bg-blue-50 text-blue-700'
+                                                    }`}>
+                                                    {selectedRequest.priority}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-500">{selectedRequest.dueDate || 'N/A'}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Additional Info */}
+                            {selectedRequest.reason && (
+                                <div>
+                                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Reason / Remarks</h4>
+                                    <p className="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                        {selectedRequest.reason}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
-                            <button onClick={() => setIsDetailsModalOpen(false)} className="px-4 py-2 bg-blue-800 text-white rounded-lg">Close</button>
+                            <button onClick={() => setIsDetailsModalOpen(false)} className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium text-sm">
+                                Close Details
+                            </button>
                         </div>
                     </div>
                 </div>

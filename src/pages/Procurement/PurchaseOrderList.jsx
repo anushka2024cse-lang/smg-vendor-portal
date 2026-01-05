@@ -9,7 +9,9 @@ import {
     AlertCircle,
     Download,
     X,
-    Eye
+    Eye,
+    Printer,
+    Send
 } from 'lucide-react';
 import { purchaseOrderService } from '../../services/purchaseOrderService';
 
@@ -58,6 +60,125 @@ const PurchaseOrderList = () => {
         }
     };
 
+    // Print Functionality with Template Injection
+    const handlePrint = (order) => {
+        const printWindow = window.open('', '_blank');
+        const rows = order.items?.map((item, i) => `
+            <tr>
+                <td class="center">${i + 1}</td>
+                <td>
+                    <div class="item-name">${item.componentName}</div>
+                    <div class="item-desc">${item.componentCode || 'N/A'}</div>
+                </td>
+                <td class="center">${item.qty} ${item.unit || 'pcs'}</td>
+                <td class="right">₹${Number(item.unitPrice).toLocaleString()}</td>
+                <td class="center">18%</td>
+                <td class="right">₹${Number(item.total).toLocaleString()}</td>
+            </tr>
+        `).join('') || '';
+
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>Purchase Order - ${order.poNumber}</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { font-family: 'Segoe UI', sans-serif; font-size: 12px; padding: 20px; }
+                    .invoice { max-width: 800px; margin: 0 auto; border: 1px solid #e2e8f0; padding: 30px; }
+                    .header { text-align: center; border-bottom: 3px solid #1e3a5f; padding-bottom: 20px; margin-bottom: 20px; }
+                    .company-name { font-size: 24px; font-weight: bold; color: #1e3a5f; }
+                    .company-details { font-size: 11px; color: #64748b; margin-top: 5px; }
+                    .po-title { text-align: center; margin: 20px 0; }
+                    .po-title h2 { font-size: 20px; color: #1e3a5f; text-transform: uppercase; letter-spacing: 2px; }
+                    .po-meta { display: flex; justify-content: center; gap: 20px; margin-top: 10px; font-size: 12px; }
+                    .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 20px 0; }
+                    .party-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; }
+                    .party-box h4 { font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 5px; }
+                    .party-box .name { font-weight: bold; font-size: 13px; color: #1e293b; }
+                    .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    .items-table th { background: #1e3a5f; color: white; padding: 8px; text-align: left; font-size: 10px; text-transform: uppercase; }
+                    .items-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
+                    .items-table .right { text-align: right; }
+                    .items-table .center { text-align: center; }
+                    .totals { display: flex; justify-content: flex-end; margin: 20px 0; }
+                    .totals-table { width: 250px; }
+                    .totals-table td { padding: 5px 10px; text-align: right; }
+                    .totals-table .label { color: #64748b; }
+                    .totals-table .value { font-weight: bold; }
+                    .totals-table .grand-total { background: #1e3a5f; color: white; font-size: 14px; }
+                    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; }
+                    .signature-line { border-top: 1px solid #000; margin: 0 20px; padding-top: 5px; text-align: center; font-size: 11px; font-weight: bold; }
+                    @media print { body { padding: 0; } .invoice { border: none; } .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="no-print" style="text-align: right; margin-bottom: 10px;">
+                    <button onclick="window.print()" style="padding: 10px 20px; background: #1e3a5f; color: white; border: none; cursor: pointer;">🖨️ Print</button>
+                </div>
+                <div class="invoice">
+                    <div class="header">
+                        <div class="company-name">SMG ELECTRIC SCOOTERS</div>
+                        <div class="company-details">
+                            Plot No 123, Industrial Area, Phase 1, New Delhi - 110020<br>
+                            Phone: +91 98765 43210 | Email: accounts@smg.com | GSTIN: 07AAACS1234A1Z5
+                        </div>
+                    </div>
+                    <div class="po-title">
+                        <h2>Purchase Order</h2>
+                        <div class="po-meta">
+                            <div><strong>PO #:</strong> ${order.poNumber}</div>
+                            <div><strong>Date:</strong> ${new Date(order.date).toLocaleDateString()}</div>
+                            <div><strong>Status:</strong> ${order.status}</div>
+                        </div>
+                    </div>
+                    <div class="parties">
+                        <div class="party-box">
+                            <h4>Bill To (Vendor)</h4>
+                            <div class="name">${order.vendor}</div>
+                            <p>${order.vendorAddress || 'Vendor Address Not Available'}</p>
+                            <p>GSTIN: ${order.gstIn || 'N/A'}</p>
+                        </div>
+                        <div class="party-box">
+                            <h4>Ship To</h4>
+                            <div class="name">SMG Electric Scooters - Plant 1</div>
+                            <p>Plot No 123, Industrial Area, Phase 1, New Delhi - 110020</p>
+                        </div>
+                    </div>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th class="center" width="40">#</th>
+                                <th>Item Description</th>
+                                <th class="center" width="60">Qty</th>
+                                <th class="right" width="80">Rate</th>
+                                <th class="center" width="60">GST</th>
+                                <th class="right" width="100">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <div class="totals">
+                        <table class="totals-table">
+                            <tr><td class="label">Subtotal:</td><td class="value">₹${Number(order.subtotal || 0).toLocaleString()}</td></tr>
+                            <tr><td class="label">GST (18%):</td><td class="value">₹${Number(order.gst || 0).toLocaleString()}</td></tr>
+                            <tr class="grand-total"><td class="label" style="color:white">Grand Total:</td><td class="value">₹${Number(order.totalAmount || 0).toLocaleString()}</td></tr>
+                        </table>
+                    </div>
+                    <div class="signatures">
+                        <div class="signature-box"><div class="signature-line">For ${order.vendor}</div></div>
+                        <div class="signature-box"><div class="signature-line">For SMG Electric Scooters</div></div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    };
+
     const tabs = ['All', 'Draft', 'Issued', 'Completed'];
 
     const filteredOrders = activeTab === 'All'
@@ -70,7 +191,6 @@ const PurchaseOrderList = () => {
             {/* Breadcrumb & Title */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-
                     <h1 className="text-2xl font-bold text-slate-900">Purchase Orders</h1>
                     <p className="text-slate-500">Manage your procurement orders.</p>
                 </div>
@@ -185,7 +305,7 @@ const PurchaseOrderList = () => {
                                     <td className="px-6 py-4 font-medium text-slate-900">{order.vendor}</td>
                                     <td className="px-6 py-4 text-sm text-slate-600">{new Date(order.date).toLocaleDateString()}</td>
                                     <td className="px-6 py-4 font-mono text-sm font-medium text-slate-800">
-                                        ₹{(order.totalAmount || 0).toLocaleString()}
+                                        ₹{Number(order.totalAmount || 0).toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 text-sm text-slate-600">{order.items?.length || 0}</td>
                                     <td className="px-6 py-4">
@@ -197,8 +317,8 @@ const PurchaseOrderList = () => {
                                         <button onClick={() => setSelectedPO(order)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="View Details">
                                             <Eye size={18} />
                                         </button>
-                                        <button className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Download PDF">
-                                            <Download size={18} />
+                                        <button onClick={() => handlePrint(order)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Print PO">
+                                            <Printer size={18} />
                                         </button>
                                     </td>
                                 </tr>
@@ -217,90 +337,116 @@ const PurchaseOrderList = () => {
             {/* View Details Modal */}
             {selectedPO && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+                    <div className="bg-white rounded shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200 flex flex-col">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-start">
-                            <h2 className="text-xl font-bold text-slate-800">Purchase Order Details</h2>
-                            <button onClick={() => setSelectedPO(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <X size={24} />
-                            </button>
+                        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-bold text-slate-800">PO Preview</h2>
+                                <span className="px-2 py-0.5 rounded-full bg-slate-200 text-xs font-medium text-slate-600">{selectedPO.poNumber}</span>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handlePrint(selectedPO)}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-900 text-white rounded hover:bg-blue-800 text-sm font-medium"
+                                >
+                                    <Printer size={16} /> Print / PDF
+                                </button>
+                                <button onClick={() => setSelectedPO(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500">
+                                    <X size={20} />
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Modal Body */}
-                        <div className="p-8 space-y-8">
+                        {/* Modal Body - Document Preview */}
+                        <div className="p-8 bg-slate-100 overflow-y-auto flex-1">
+                            <div className="max-w-[800px] mx-auto bg-white shadow-lg min-h-[1000px] p-8 border border-slate-200 text-sm text-slate-900" id="po-preview">
 
-                            {/* Key Details Row */}
-                            <div className="grid grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <div>
-                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">PO Number</p>
-                                    <p className="text-lg font-bold text-slate-800">{selectedPO.poNumber}</p>
+                                {/* Document Header */}
+                                <div className="text-center border-b-2 border-blue-900 pb-6 mb-8">
+                                    <div className="text-3xl font-bold text-blue-900 mb-2">SMG ELECTRIC SCOOTERS</div>
+                                    <div className="text-slate-500 text-xs">
+                                        Plot No 123, Industrial Area, Phase 1, New Delhi - 110020<br />
+                                        GSTIN: 07AAACS1234A1Z5 | Phone: +91 98765 43210
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Vendor</p>
-                                    <p className="text-sm font-bold text-slate-800 leading-tight">{selectedPO.vendor}</p>
+
+                                {/* Title & Meta */}
+                                <div className="flex justify-between items-start mb-8">
+                                    <div>
+                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Bill To (Vendor)</div>
+                                        <div className="font-bold text-lg">{selectedPO.vendor}</div>
+                                        <div className="text-slate-600 max-w-[200px] text-xs mt-1">
+                                            {selectedPO.vendorAddress || 'Vendor Address Not Available'}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-2xl font-bold text-blue-900 uppercase tracking-widest mb-2">Purchase Order</div>
+                                        <div className="space-y-1 text-xs">
+                                            <div className="flex justify-end gap-4"><span className="text-slate-500">PO #:</span> <span className="font-mono font-bold">{selectedPO.poNumber}</span></div>
+                                            <div className="flex justify-end gap-4"><span className="text-slate-500">Date:</span> <span className="font-bold">{new Date(selectedPO.date).toLocaleDateString()}</span></div>
+                                            <div className="flex justify-end gap-4"><span className="text-slate-500">Status:</span> <span className="font-bold">{selectedPO.status}</span></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">PO Date</p>
-                                    <p className="text-sm font-bold text-slate-800">{new Date(selectedPO.date).toLocaleDateString()}</p>
+
+                                {/* Items Table */}
+                                <table className="w-full mb-8">
+                                    <thead>
+                                        <tr className="bg-blue-900 text-white text-xs uppercase">
+                                            <th className="p-2 text-center w-10">#</th>
+                                            <th className="p-2 text-left">Item Description</th>
+                                            <th className="p-2 text-center w-20">Qty</th>
+                                            <th className="p-2 text-right w-24">Rate</th>
+                                            <th className="p-2 text-center w-16">GST</th>
+                                            <th className="p-2 text-right w-28">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {selectedPO.items?.map((item, i) => (
+                                            <tr key={i} className="text-xs">
+                                                <td className="p-3 text-center text-slate-500">{i + 1}</td>
+                                                <td className="p-3">
+                                                    <div className="font-bold text-slate-800">{item.componentName}</div>
+                                                    <div className="text-[10px] text-slate-500">{item.componentCode}</div>
+                                                </td>
+                                                <td className="p-3 text-center">{item.qty} {item.unit}</td>
+                                                <td className="p-3 text-right text-slate-600">₹{Number(item.unitPrice).toLocaleString()}</td>
+                                                <td className="p-3 text-center text-slate-500">18%</td>
+                                                <td className="p-3 text-right font-bold text-slate-800">₹{Number(item.total).toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                {/* Totals */}
+                                <div className="flex justify-end mb-12">
+                                    <div className="w-64 space-y-2">
+                                        <div className="flex justify-between text-xs text-slate-600">
+                                            <span>Subtotal:</span>
+                                            <span>₹{Number(selectedPO.subtotal || 0).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-xs text-slate-600">
+                                            <span>GST (18%):</span>
+                                            <span>₹{Number(selectedPO.gst || 0).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm font-bold text-blue-900 border-t border-slate-300 pt-2">
+                                            <span>Grand Total:</span>
+                                            <span>₹{Number(selectedPO.totalAmount || 0).toLocaleString()}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Status</p>
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${getStatusColor(selectedPO.status)}`}>
-                                        {selectedPO.status}
-                                    </span>
+
+                                {/* Footer / Signatures */}
+                                <div className="grid grid-cols-2 gap-12 mt-auto pt-12">
+                                    <div className="text-center">
+                                        <div className="border-t border-slate-300 pt-2 text-xs font-bold text-slate-600">For {selectedPO.vendor}</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="border-t border-slate-300 pt-2 text-xs font-bold text-slate-600">For SMG Electric Scooters</div>
+                                        <div className="text-[10px] text-slate-400 mt-1">Authorized Signatory</div>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Line Items */}
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-800 mb-4 text-blue-900">Line Items</h3>
-                                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                                    <table className="w-full text-left">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
-                                            <tr>
-                                                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Component</th>
-                                                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-center">Qty</th>
-                                                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Unit Price</th>
-                                                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase text-right">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {selectedPO.items?.map((item, idx) => (
-                                                <tr key={idx}>
-                                                    <td className="px-4 py-3">
-                                                        <p className="font-bold text-slate-800 text-sm">{item.componentName}</p>
-                                                        <p className="text-xs text-slate-400 font-mono">{item.componentCode}</p>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center text-sm font-medium text-slate-700">
-                                                        {item.qty} {item.unit}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right text-sm text-slate-600">
-                                                        ₹{item.unitPrice.toLocaleString()}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right text-sm font-bold text-slate-800">
-                                                        ₹{item.total.toLocaleString()}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                        <tfoot className="bg-slate-50/50">
-                                            <tr>
-                                                <td colSpan="3" className="px-4 py-2 text-right text-xs font-medium text-slate-500">Subtotal</td>
-                                                <td className="px-4 py-2 text-right text-sm font-medium text-slate-700">₹{(selectedPO.subtotal || 0).toLocaleString()}</td>
-                                            </tr>
-                                            <tr>
-                                                <td colSpan="3" className="px-4 py-2 text-right text-xs font-medium text-slate-500">GST (18%)</td>
-                                                <td className="px-4 py-2 text-right text-sm font-medium text-slate-700">₹{(selectedPO.gst || 0).toLocaleString()}</td>
-                                            </tr>
-                                            <tr>
-                                                <td colSpan="3" className="px-4 py-3 text-right text-sm font-bold text-slate-900">Total</td>
-                                                <td className="px-4 py-3 text-right text-lg font-bold text-blue-900">₹{(selectedPO.totalAmount || 0).toLocaleString()}</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
                 </div>

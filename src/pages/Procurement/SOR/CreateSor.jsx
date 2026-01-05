@@ -7,7 +7,7 @@ const CreateSor = () => {
 
     // Form State
     const [formData, setFormData] = useState({
-        sorNumber: 'SOR-202512-785',
+        sorNumber: '',
         vendor: '',
         documentNumber: 'LBD-MKTGSOR-PC',
         companyName: '',

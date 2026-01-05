@@ -48,9 +48,24 @@ exports.getRequest = async (req, res) => {
 // Update request
 exports.updateRequest = async (req, res) => {
     try {
+        let updateData = { ...req.body };
+
+        // Fix: Frontend sends vendor Name in 'vendor' field, but Schema expects ObjectId
+        if (req.body.vendor) {
+            updateData.vendorName = req.body.vendor; // Always update the string name
+
+            const vendorDoc = await Vendor.findOne({ name: req.body.vendor });
+            if (vendorDoc) {
+                updateData.vendor = vendorDoc._id; // Link to Vendor ID if found
+            } else {
+                // If it's a name but no ID found, remove 'vendor' field to prevent CastError (String -> ObjectId)
+                delete updateData.vendor;
+            }
+        }
+
         const request = await SparePartRequest.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            updateData, // Use the processed data
             { new: true, runValidators: true }
         );
         if (!request) {

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { paymentService } from '../../services/paymentService';
 import socketService from '../../services/socketService';
 import CreatePaymentModal from './CreatePaymentModal';
+import PaymentTimeline from './components/PaymentTimeline';
+import { printPaymentReceipt } from '../../utils/printPaymentReceipt';
 import {
     CreditCard,
     Clock,
@@ -16,7 +18,8 @@ import {
     ChevronDown,
     Download,
     Plus,
-    Send
+    Send,
+    Printer
 } from 'lucide-react';
 
 const PaymentList = () => {
@@ -180,97 +183,7 @@ const PaymentList = () => {
     };
 
     const handleDownloadReceipt = (payment) => {
-        import('jspdf').then(jsPDFModule => {
-            const jsPDF = jsPDFModule.default;
-            const doc = new jsPDF();
-
-            // Header
-            doc.setFillColor(33, 55, 99); // SMG Blue
-            doc.rect(0, 0, 210, 40, 'F');
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(22);
-            doc.setFont('helvetica', 'bold');
-            doc.text("SMG VENDOR PORTAL", 105, 20, { align: "center" });
-
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text("Payment Advice / Receipt", 105, 30, { align: "center" });
-
-            // Receipt Info Container
-            doc.setTextColor(0, 0, 0);
-            doc.setDrawColor(200, 200, 200);
-            doc.roundedRect(15, 50, 180, 110, 3, 3);
-
-            // Row 1: Basic Info
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text("Receipt ID:", 25, 70);
-            doc.text("Date:", 120, 70);
-
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont('helvetica', 'bold');
-            doc.text(payment.paymentNumber, 25, 77);
-            doc.text(new Date(payment.invoiceDate).toLocaleDateString('en-IN'), 120, 77);
-
-            // Row 2: Vendor
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.setFont('helvetica', 'normal');
-            doc.text("Vendor:", 25, 95);
-
-            doc.setFontSize(14);
-            doc.setTextColor(33, 55, 99);
-            doc.setFont('helvetica', 'bold');
-            doc.text(payment.vendor?.name || 'N/A', 25, 103);
-
-            // Divider
-            doc.setDrawColor(230, 230, 230);
-            doc.line(25, 110, 185, 110);
-
-            // Row 3: Invoice & PO
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.setFont('helvetica', 'normal');
-            doc.text("Invoice Number:", 25, 125);
-            doc.text("PO Number:", 120, 125);
-
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont('helvetica', 'bold');
-            doc.text(payment.invoiceNumber, 25, 132);
-            doc.text(payment.purchaseOrder?.poNumber || 'N/A', 120, 132);
-
-            // Row 4: Amount & Status
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.setFont('helvetica', 'normal');
-            doc.text("Amount Paid:", 25, 147);
-            doc.text("Status:", 120, 147);
-
-            doc.setFontSize(16);
-            doc.setTextColor(22, 163, 74); // Green
-            doc.setFont('helvetica', 'bold');
-            doc.text(`INR ${payment.netPayableAmount?.toLocaleString() || payment.paymentAmount.toLocaleString()}`, 25, 155);
-
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text(payment.status, 120, 155);
-
-            // Footer / Ref
-            doc.setFontSize(9);
-            doc.setTextColor(120, 120, 120);
-            doc.setFont('helvetica', 'italic');
-            doc.text(`Transaction Reference: ${payment.transactionReference || 'Pending'}`, 105, 180, { align: "center" });
-            doc.text(`Payment Mode: ${payment.paymentMode || 'N/A'}`, 105, 185, { align: "center" });
-
-            doc.setFont('helvetica', 'normal');
-            doc.text("This is a computer-generated receipt.", 105, 280, { align: "center" });
-
-            // Save
-            doc.save(`Receipt-${payment.invoiceNumber}.pdf`);
-        });
+        printPaymentReceipt(payment);
     };
 
     return (
@@ -439,9 +352,9 @@ const PaymentList = () => {
                                                 )}
                                                 <button
                                                     onClick={() => handleDownloadReceipt(payment)}
-                                                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Download Receipt"
+                                                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Print Receipt"
                                                 >
-                                                    <Download size={16} />
+                                                    <Printer size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -470,6 +383,7 @@ const PaymentList = () => {
                             </button>
                         </div>
                         <div className="p-6 space-y-6">
+                            <PaymentTimeline status={selectedPayment.status} />
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <p className="text-xs text-slate-500 font-medium mb-1">Invoice Number</p>
@@ -538,8 +452,8 @@ const PaymentList = () => {
                                     onClick={() => handleDownloadReceipt(selectedPayment)}
                                     className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors"
                                 >
-                                    <Download size={16} />
-                                    Download Receipt
+                                    <Printer size={16} />
+                                    Print Receipt
                                 </button>
                             </div>
                         </div>

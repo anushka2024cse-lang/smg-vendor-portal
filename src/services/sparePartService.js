@@ -1,4 +1,4 @@
-import { apiClient } from './config';
+import apiClient from './apiClient';
 
 export const sparePartService = {
     getStats: async () => {

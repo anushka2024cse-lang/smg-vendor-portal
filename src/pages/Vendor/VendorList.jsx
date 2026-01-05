@@ -51,7 +51,7 @@ const VendorList = () => {
         try {
             const vendor = vendors.find(v => v._id === vendorId || v.vendorId === vendorId);
             if (vendor) {
-                const newStatus = vendor.status === 'Blocked' ? 'Active' : 'Blocked';
+                const newStatus = vendor.status === 'Blacklisted' ? 'Active' : 'Blacklisted';
                 await apiClient.put(`/vendors/${vendorId}`, { status: newStatus });
                 loadVendors(); // Refresh list
             }
@@ -90,10 +90,100 @@ const VendorList = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Active': return 'bg-green-100 text-green-700 border-green-200';
-            case 'Blocked': return 'bg-red-100 text-red-700 border-red-200';
+            case 'Blacklisted': return 'bg-red-100 text-red-700 border-red-200';
             case 'Pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
             default: return 'bg-slate-100 text-slate-700 border-slate-200';
         }
+    };
+
+    const handlePrintList = () => {
+        const logoUrl = '/src/asset/logo/Logo.jpg';
+        const dateStr = new Date().toLocaleDateString();
+
+        const rows = filteredVendors.map((v, i) => `
+            <tr>
+                <td style="text-align:center">${i + 1}</td>
+                <td><strong>${v.vendorId || 'N/A'}</strong></td>
+                <td>${v.name}</td>
+                <td>${v.type || '-'}</td>
+                <td>${v.contact || '-'}</td>
+                <td>${v.city || '-'}</td>
+                <td><span class="status ${v.status}">${v.status}</span></td>
+            </tr>
+        `).join('');
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Vendor Master List - ${dateStr}</title>
+                <style>
+                    body { font-family: 'Segoe UI', sans-serif; padding: 20px; font-size: 12px; }
+                    .header { display: flex; align-items: center; border-bottom: 2px solid #1e3a5f; padding-bottom: 15px; margin-bottom: 20px; }
+                    .logo { height: 60px; margin-right: 20px; }
+                    .title-block { flex: 1; }
+                    .company { font-size: 24px; font-weight: bold; color: #1e3a5f; }
+                    .report-title { font-size: 16px; color: #64748b; margin-top: 5px; font-weight: 600; text-transform: uppercase; }
+                    .meta { text-align: right; font-size: 11px; color: #64748b; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th { background: #1e3a5f; color: white; padding: 10px; text-align: left; font-size: 11px; uppercase; }
+                    td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+                    tr:nth-child(even) { background: #f8fafc; }
+                    
+                    .status { padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+                    .status.Active { background: #dcfce7; color: #166534; }
+                    .status.Blacklisted { background: #fee2e2; color: #991b1b; } /* Updated from Blocked */
+                    .status.Pending { background: #fef9c3; color: #854d0e; }
+                    
+                    .footer { margin-top: 30px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+                    @media print { .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <img src="${logoUrl}" class="logo" alt="Logo" onerror="this.style.display='none'" />
+                    <div class="title-block">
+                        <div class="company">SMG Electric Scooters</div>
+                        <div class="report-title">Vendor Master List</div>
+                    </div>
+                    <div class="meta">
+                        <div>Date: ${dateStr}</div>
+                        <div>Total Vendors: ${filteredVendors.length}</div>
+                    </div>
+                </div>
+
+                <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+                    <button onclick="window.print()" style="background:#1e3a5f; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">🖨️ Print / PDF</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align:center">#</th>
+                            <th>Code</th>
+                            <th>Company Name</th>
+                            <th>Type</th>
+                            <th>Contact Person</th>
+                            <th>City</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+                
+                <div class="footer">
+                    Generated from SMG Vendor Portal on ${new Date().toLocaleString()}
+                </div>
+            </body>
+            </html>
+        `;
+
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
     };
 
     return (
@@ -110,9 +200,12 @@ const VendorList = () => {
                         <p className="text-slate-500 mt-1">Manage and monitor all your supplier relationships.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm font-medium">
-                            <FileText size={18} />
-                            Export CSV
+                        <button
+                            onClick={handlePrintList}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors shadow-sm font-medium"
+                        >
+                            <Printer size={18} />
+                            Print List / PDF
                         </button>
                         <button
                             onClick={() => navigate('/vendor/onboarding')}
@@ -155,9 +248,9 @@ const VendorList = () => {
                     </div>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Blocked</p>
+                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Blacklisted</p>
                     <div className="flex items-end justify-between mt-2">
-                        <h3 className="text-2xl font-bold text-red-600">{vendors.filter(v => v.status === 'Blocked').length}</h3>
+                        <h3 className="text-2xl font-bold text-red-600">{vendors.filter(v => v.status === 'Blacklisted').length}</h3>
                         <div className="p-2 bg-red-50 text-red-600 rounded-lg">
                             <Ban size={20} />
                         </div>
@@ -190,7 +283,7 @@ const VendorList = () => {
                             <option value="All">All Statuses</option>
                             <option value="Active">Active</option>
                             <option value="Pending">Pending</option>
-                            <option value="Blocked">Blocked</option>
+                            <option value="Blacklisted">Blacklisted</option>
                         </select>
                     </div>
                 </div>
@@ -265,8 +358,8 @@ const VendorList = () => {
                                                     e.stopPropagation();
                                                     handleVendorBlock(vendorId);
                                                 }}
-                                                className={`p-1.5 rounded-md transition-colors ${vendor.status === 'Blocked' ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
-                                                title={vendor.status === 'Blocked' ? "Unblock Vendor" : "Block Vendor"}
+                                                className={`p-1.5 rounded-md transition-colors ${vendor.status === 'Blacklisted' ? 'text-red-600 bg-red-50 hover:bg-red-100' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
+                                                title={vendor.status === 'Blacklisted' ? "Unblock Vendor" : "Blacklist Vendor"}
                                             >
                                                 <Ban size={18} />
                                             </button>
@@ -355,7 +448,7 @@ const VendorList = () => {
                                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
                                     >
                                         <option value="Active">Active</option>
-                                        <option value="Blocked">Blocked</option>
+                                        <option value="Blacklisted">Blacklisted</option>
                                         <option value="Pending">Pending</option>
                                     </select>
                                 </div>
